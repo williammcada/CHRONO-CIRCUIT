@@ -1,0 +1,10 @@
+{
+  "name": "Chrono Circuit",
+  "short_name": "Chrono Circuit",
+  "description": "An elapsed-time action adventure.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#080d1d",
+  "theme_color": "#080d1d",
+  "orientation": "landscape"
+}

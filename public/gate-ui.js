@@ -1,3 +1,4 @@
+import {answerPolicy} from './answer-mode.js';
 import {absolute,fromAbsolute,formatTime,boundaryFlags,landmarkHops,addMinutes} from './time-engine.js';
 import {expectedAnswer,answerLabel,taskChoices,taskHint,secondsText} from './math-tasks.js';
 import {learningSession,submitLearningAnswer,nextLearningCheck} from './progress.js';
@@ -25,7 +26,7 @@ export function candidateFromDraft(p,d){
  if(p.task==='duration'){const seconds=parseDurationDraft(d);return seconds===null||seconds%60?null:seconds/60;}
  if(p.task==='comparison'){const seconds=parseDurationDraft(d);return d.route&&seconds!==null?{route:d.route,seconds}:null;}
  if(p.task==='route')return d.route||null;
- if(p.task==='words')return d.choice===undefined?null:fromAbsolute(Number(d.choice));
+ if(p.task==='words')return d.choice===undefined?parseTimeDraft(d,!!p.notation24):fromAbsolute(Number(d.choice));
  return parseTimeDraft(d,!!p.notation24);
 }
 function numberField(name,label,d,max){return `<label>${label}<input data-field="${name}" type="number" inputmode="numeric" min="0" ${max===undefined?'':`max="${max}"`} value="${esc(d[name]??'')}" placeholder="0" autocomplete="off"></label>`;}
@@ -61,8 +62,10 @@ function method(p){
 function initialDraft(p){return p.task==='words'?{}:{day:'0',period:p.start?.minuteOfDay>=720?'PM':'AM'};}
 export function openGateUI(api){
  const {problem,options={},getSave,persist,showOverlay,overlay,onExit,onComplete}=api,audio=api.audio||{};
+ const policy=answerPolicy(options.answerMode);
  const save=getSave(),session=learningSession(save,problem,options);let closed=false,finishing=false;
- if(!Object.keys(session.draft).length)session.draft=initialDraft(session.current);
+ if(!Object.keys(session.draft).length)session.draft=policy.manual?{}:initialDraft(session.current);
+ if(policy.worked&&session.totalAttempts===0&&session.checkSerial===0){session.phase='demonstration';session.status='check_pending';session.answerMode='teach';}
  persist();
  const bind=(selector,event,fn)=>overlay.querySelectorAll(selector).forEach(el=>el.addEventListener(event,fn));
  function readInputs(){for(const input of overlay.querySelectorAll('[data-field]'))session.draft[input.dataset.field]=input.value;persist();}
@@ -74,10 +77,11 @@ export function openGateUI(api){
   else if(p.task==='comparison')inputs=`<label class="gate-select">${p.compare?.which==='longer'?'Longer':'Shorter'} route<select data-field="route"><option value="">Choose…</option>${['A','B','equal'].map(r=>`<option value="${r}" ${d.route===r?'selected':''}>${r==='equal'?'EQUAL':`Route ${r}`}</option>`).join('')}</select></label><p>Difference in duration</p>${durationFields(d)}`;
   else if(p.task==='seconds'||p.task==='duration')inputs=durationFields(d,p.task==='seconds'?p.unitTarget:null);
   else if(p.task==='quantity')inputs=`<div class="gate-fields">${numberField('amount',esc(p.unit||'Number'),d)}</div>`;
-  else if(p.task==='words')inputs=`<div class="choice-grid">${taskChoices(p).map(c=>`<button class="choice" data-word="${absolute(c)}">${esc(answerLabel(p,c))}</button>`).join('')}</div>`;
+  else if(p.task==='words'&&!policy.manual)inputs=`<div class="choice-grid">${taskChoices(p).map(c=>`<button class="choice" data-word="${absolute(c)}">${esc(answerLabel(p,c))}</button>`).join('')}</div>`;
   else inputs=`<canvas id="gate-clock" width="210" height="210" aria-label="Clock used to explore your answer"></canvas><div class="gate-fields">${numberField('hour',p.notation24?'Hour (0–23)':'Hour (1–12)',d,p.notation24?23:12)}${numberField('minute','Minute (0–59)',d,59)}${p.notation24?'':`<label>AM / PM<select data-field="period"><option ${d.period==='AM'?'selected':''}>AM</option><option ${d.period==='PM'?'selected':''}>PM</option></select></label>`}</div><label class="gate-select">Day<select data-field="day">${[-1,0,1,2].map(day=>`<option value="${day}" ${Number(d.day||0)===day?'selected':''}>${p.namedDays?days[day]:day===0?'Same day':day===-1?'Previous day':day===1?'Next day':'Two days later'}</option>`).join('')}</select></label><div class="gate-adjust">${[-60,-15,-5,5,15,60].map(n=>`<button class="button" data-adjust="${n}">${n>0?'+':'−'}${Math.abs(n)===60?'1 h':Math.abs(n)+' min'}</button>`).join('')}</div>`;
+  if(policy.manual){inputs=inputs.replace(/<canvas[^>]*>[\s\S]*?<\/canvas>/g,'').replace(/<div class="gate-adjust">[\s\S]*?<\/div>/g,'');inputs=inputs.replace('<select data-field="period">','<select data-field="period"><option value="">Choose…</option>');}
   const feedback=session.feedback||'The world is paused. Take all the time you need.';
-  showOverlay(`<section class="gate-panel"><div class="gate-question"><p class="eyebrow">${options.practice?'PRACTICE RELAY':`CLOCK GATE · ${options.ordinal||1} / ${options.total||1}`}${session.checkSerial?' · PRACTICE CHECK':''}</p><h2>${p.task==='comparison'?'COMPARE THE JOURNEYS':p.task==='route'?'PLAN THE ROUTE':['seconds','duration','quantity'].includes(p.task)?'WORK WITH TIME':'MOVE THROUGH TIME'}</h2><p class="gate-context">${esc(p.context)}</p>${visualData(p)}${session.attempts>=2&&!demonstration?`<p class="gate-scaffold">${esc(taskHint(p,null).text)}</p>`:''}<p class="feedback" aria-live="polite">${esc(feedback)}</p></div><div class="gate-answer">${inputs}${!demonstration&&p.task!=='words'?'<button class="button primary" id="gate-submit">LOCK IN ANSWER</button>':''}</div></section><div class="math-back"><button class="button ghost" id="gate-back">${options.practice?'BACK TO PRACTICE':'BACK TO THE CLOCK'}</button></div>`,true);
+  showOverlay(`<section class="gate-panel"><div class="gate-question"><p class="eyebrow">${options.practice?'PRACTICE RELAY':`${policy.mode.toUpperCase()} · CLOCK GATE · ${options.ordinal||1} / ${options.total||1}`}${session.checkSerial?' · PRACTICE CHECK':''}</p><h2>${p.task==='comparison'?'COMPARE THE JOURNEYS':p.task==='route'?'PLAN THE ROUTE':['seconds','duration','quantity'].includes(p.task)?'WORK WITH TIME':'MOVE THROUGH TIME'}</h2><p class="gate-context">${esc(p.context)}</p>${visualData(p)}${!policy.manual&&session.attempts>=2&&!demonstration?`<p class="gate-scaffold">${esc(taskHint(p,null).text)}</p>`:''}<p class="feedback" aria-live="polite">${esc(feedback)}</p></div><div class="gate-answer">${inputs}${!demonstration&&(p.task!=='words'||policy.manual)?'<button class="button primary" id="gate-submit">LOCK IN ANSWER</button>':''}</div></section><div class="math-back"><button class="button ghost" id="gate-back">${options.practice?'BACK TO PRACTICE':'BACK TO THE CLOCK'}</button></div>`,true);
   bind('#gate-back','click',()=>{readInputs();closed=true;globalThis.speechSynthesis?.cancel();onExit?.();});
   bind('[data-field]','input',()=>{readInputs();drawAnswerClock();});bind('[data-field]','change',e=>{readInputs();if(e.currentTarget.dataset.field==='durationUnit')render();else drawAnswerClock();});
   bind('#gate-submit','click',()=>{readInputs();submit(candidateFromDraft(p,session.draft));});
@@ -92,12 +96,12 @@ export function openGateUI(api){
   if(candidate===null){session.feedback='Enter every required answer part. Use whole numbers; minutes and seconds in a clock go from 0 to 59.';persist();render();return;}
   const result=submitLearningAnswer(save,session,candidate,options);
   if(result.correct){
-   finishing=true;audio.good?.();const record={id:session.original.id,templateId:problem.templateId||problem.id,skill:problem.skill,representation:problem.representation,boundary:boundaryFlags(problem),support:session.support,attempts:session.totalAttempts,errors:[...session.errors],seconds:Math.max(0,Math.round((Date.now()-session.startedAt)/1000)),at:Date.now(),transferChecks:session.checkSerial};
+   finishing=true;audio.good?.();const record={id:session.original.id,templateId:problem.templateId||problem.id,skill:problem.skill,representation:problem.representation,answerMode:policy.mode,boundary:boundaryFlags(problem),support:session.support,attempts:session.totalAttempts,errors:[...session.errors],seconds:Math.max(0,Math.round((Date.now()-session.startedAt)/1000)),at:Date.now(),transferChecks:session.checkSerial};
    if(!result.alreadyCredited){save.records.push(record);save.records=save.records.slice(-160);}
    persist();const el=overlay.querySelector('.feedback');if(el){el.className='feedback good';el.textContent=`${answerLabel(session.current,expectedAnswer(session.current))}. ${problem.effect}.`;}
    overlay.querySelectorAll('button,input,select').forEach(b=>b.disabled=true);
    setTimeout(()=>{if(closed)return;closed=true;onComplete?.({attempts:session.totalAttempts,support:session.support,problem,record,credited:true});},650);
-  }else{audio.wrong?.();session.feedback=taskHint(session.current,candidate).text;persist();render();}
+  }else{if(!result.transfer)audio.wrong?.();session.feedback=result.transfer?'Correct. Confirm it on a fresh transfer question.':policy.manual?'Not yet. Check your calculation, units, and day.':taskHint(session.current,candidate).text;persist();render();}
  }
  function narrate(){if(!save.settings.narration||!globalThis.speechSynthesis)return;globalThis.speechSynthesis.cancel();const p=session.current,spoken=[p.context,p.tableNote||'',...(p.schedule||[]).map(r=>`${r.id}. ${r.departure!==undefined?`Departure ${timeLabel(r.departure)}.`:''} ${r.arrival!==undefined?`Arrival ${timeLabel(r.arrival)}.`:''}`),...(p.steps||[]).map(s=>`${s.label}: ${s.minutes===null?'missing time':secondsText(s.minutes*60)}`),...(p.trips||[]).map(t=>`Route ${t.id}, ${timeLabel(t.start,!!p.namedDays)} to ${timeLabel(t.end,!!p.namedDays)}`)].join(' ');globalThis.speechSynthesis.speak(new SpeechSynthesisUtterance(spoken));}
  render();narrate();return {session,close(){readInputs();closed=true;globalThis.speechSynthesis?.cancel();},submit,render};

@@ -116,9 +116,9 @@ function stepNewEnemy(e,p,dt,assist,{room,platforms=[],waterY}){
   const supports=platforms.filter(s=>!s.hidden&&Math.abs(s.y-e.foot)<4&&s.x<=e.x+e.w&&s.x+s.w>=e.x);
   if(supports.length){const s=supports[0];e.minX=s.x;e.maxX=Math.max(s.x,s.x+s.w-e.w);e.y=s.y-e.h;patrol(e,dt);}
  }else if(e.behavior==='magnet'){
-  const distance=Math.abs(p.x-e.x),dir=p.x<e.x?-1:1;
-  if(e.timer<.55&&e.timer>0){e.action='field';if(!p.onGround&&distance<90)p.externalPush=clamp((p.externalPush||0)+dir*(e.cycle%2?-28:28),-32,32);}else e.action='rest';
-  if(e.warning)e.markers=[{x:e.x-80,y:e.y-16,w:160,h:50,field:true,direction:e.cycle%2?-1:1}];
+  const dx=e.x+e.w/2-(p.x+p.w/2),dy=e.y+e.h/2-(p.y+p.h/2);
+  e.action=e.timer>0&&e.timer<1.05*scale?'field':'rest';
+  if(e.action==='field'&&Math.abs(dx)<90&&Math.abs(dy)<48&&Math.abs(dx)>18){e.pullAge=(e.pullAge||0)+dt;p.magnetPush=(p.magnetPush||0)+Math.sign(dx)*48*Math.min(1,e.pullAge/.2);}else e.pullAge=0;
   if(e.timer<=0){e.cycle=(e.cycle||0)+1;e.timer=3.1*scale;e.markers=[];}
  }else if(e.behavior==='fuse'){
   if(e.timer<=0){for(let i=0;i<2;i++)shots.push({x:e.x+e.w/2,y:e.y+6,vx:e.dir*(48+i*22),vy:-112-i*12,gravity:420,life:2.4,fuse:1.65+i*.2,r:4,kind:'charge',bounces:0,blastRadius:15,destructible:true});e.timer=3.8*scale;}

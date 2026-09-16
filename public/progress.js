@@ -1,3 +1,4 @@
+import {modeOf} from './answer-mode.js';
 import {BOSS_ROOM,GATE_IDS,ROOMS,STAGES,PROBLEMS,stageFor} from './stage-data.js';
 import {buildGateQuestions,gateQuestionCount,buildPracticeCheck,problemFingerprint} from './gate-questions.js';
 import {answerCorrect,taskHint} from './math-tasks.js';
@@ -5,8 +6,8 @@ import {makeExpansionProblem} from './curriculum.js';
 import {generateProblem} from './time-engine.js';
 export const SAVE_KEY='chrono-circuit-save-v1';
 export const MAX_ENERGY=8;
-export const DEFAULT_SETTINGS={assist:true,mute:false,musicMute:false,effectsMute:false,musicVolume:.6,effectsVolume:.7,reducedMotion:false,contrast:false,narration:false,band:'story',showHints:true,touchControls:false,questionsPerGate:2};
-const freshRoute=s=>({room:s.start,roomId:ROOMS[s.start]?.id,checkpoint:s.start,checkpointId:ROOMS[s.start]?.id,bestRoom:s.start,bestRoomId:ROOMS[s.start]?.id,complete:false,started:false,questionsPerGate:2,attempt:0});
+export const DEFAULT_SETTINGS={assist:true,mute:false,musicMute:false,effectsMute:false,musicVolume:.6,effectsVolume:.7,reducedMotion:false,contrast:false,narration:false,band:'story',showHints:true,touchControls:false,questionsPerGate:2,answerMode:'guide',stageModes:{}};
+const freshRoute=s=>({room:s.start,roomId:ROOMS[s.start]?.id,checkpoint:s.start,checkpointId:ROOMS[s.start]?.id,bestRoom:s.start,bestRoomId:ROOMS[s.start]?.id,complete:false,started:false,questionsPerGate:2,answerMode:'guide',attempt:0});
 export function freshSave(settings={}){
  return {version:5,learning:{},world:{},roomId:ROOMS[0]?.id,checkpointId:ROOMS[0]?.id,room:0,checkpoint:0,solved:[],answered:[],complete:false,run:0,settings:{...DEFAULT_SETTINGS,...settings,questionsPerGate:gateQuestionCount(settings.questionsPerGate??2)},records:[],powerUnlocked:false,energy:8,cleared:[],weapons:[],equipped:'brake',stage:'foundry',bestRoom:0,routes:Object.fromEntries(STAGES.map(s=>[s.id,freshRoute(s)]))};
 }
@@ -18,7 +19,7 @@ export function startStageRun(save,id){
  const s=stageFor(id),old=save.routes[s.id];
  save.solved=save.solved.filter(g=>!s.gates.includes(g));
  save.answered=save.answered.filter(p=>!p.startsWith(s.id+'_'));
- save.routes[s.id]={...freshRoute(s),attempt:Math.min(1000000,old.attempt+1),questionsPerGate:gateQuestionCount(save.settings.questionsPerGate)};
+ save.routes[s.id]={...freshRoute(s),attempt:Math.min(1000000,old.attempt+1),questionsPerGate:gateQuestionCount(save.settings.questionsPerGate),answerMode:modeOf(save.settings.stageModes?.[s.id]||save.settings.answerMode)};
  for(const key of Object.keys(save.world||{}))if(ROOMS.find(room=>room.id===key)?.stage===s.id)delete save.world[key];
  for(const key of Object.keys(save.learning||{}))if(key.startsWith(s.id+'_'))delete save.learning[key];
  save.energy=MAX_ENERGY;rememberRoom(save,s.start);
@@ -44,6 +45,7 @@ export function migrateSave(raw){
  if(!Number.isInteger(raw.room)||raw.room<0||raw.room>(raw.version===1?6:raw.version===2?BOSS_ROOM:ROOMS.length-1)||!Array.isArray(raw.solved))return null;
  const next=freshSave();
  for(const [key,value] of Object.entries(DEFAULT_SETTINGS)){const candidate=raw.settings[key];if(typeof candidate===typeof value&&(typeof value!=='number'||Number.isFinite(candidate)))next.settings[key]=key==='questionsPerGate'?gateQuestionCount(candidate):typeof value==='number'?Math.max(0,Math.min(1,candidate)):candidate;}
+ next.settings.answerMode=modeOf(raw.settings.answerMode);next.settings.stageModes=Object.fromEntries(STAGES.filter(s=>['teach','guide','independent','mastery'].includes(raw.settings.stageModes?.[s.id])).map(s=>[s.id,raw.settings.stageModes[s.id]]));
  next.world={};for(const [id,value] of Object.entries(raw.world||{}))if(ROOMS.some(room=>room.id===id)&&value&&typeof value==='object')next.world[id]=JSON.parse(JSON.stringify(value));
  next.records=raw.records.slice(-160);next.run=Number.isInteger(raw.run)?Math.max(0,raw.run):0;
  next.weapons=Array.isArray(raw.weapons)?[...new Set(raw.weapons.filter(w=>['brake','lance','disc','burst','depth','roller','orbit','arc'].includes(w)))]:[];
@@ -55,7 +57,7 @@ export function migrateSave(raw){
  next.cleared=Array.isArray(raw.cleared)?[...new Set(raw.cleared.filter(id=>STAGES.some(s=>s.id===id)))]:[];
  if(raw.version===2){Object.assign(next.routes.foundry,{room:raw.room,checkpoint:checkpointFor(raw.room),bestRoom:Math.max(raw.room,Math.min(12,raw.bestRoom||0)),complete:!!raw.complete,started:raw.room>0||raw.solved.length>0});if(raw.complete&&!next.cleared.includes('foundry'))next.cleared.push('foundry');}
  else for(const s of STAGES){
-  const r=raw.routes?.[s.id];if(!r||!Number.isInteger(r.room)||r.room<s.start||r.room>s.end)continue;
+  const r=raw.routes?.[s.id];next.routes[s.id].answerMode=modeOf(r?.answerMode);if(!r||!Number.isInteger(r.room)||r.room<s.start||r.room>s.end)continue;
   Object.assign(next.routes[s.id],{room:r.room,checkpoint:checkpointFor(r.room),bestRoom:Math.max(r.room,Math.min(s.end,Number.isInteger(r.bestRoom)?r.bestRoom:s.start)),complete:!!r.complete,started:!!r.started});
   if(raw.version>=4){next.routes[s.id].questionsPerGate=gateQuestionCount(r.questionsPerGate??2);next.routes[s.id].attempt=Number.isInteger(r.attempt)?Math.max(0,Math.min(1000000,r.attempt)):0;}
  }
@@ -101,10 +103,10 @@ function validatedLearningEntry(id,e,questions,answered){
   const fields=new Set(['hour','minute','period','day','amount','hours','minutes','seconds','route','durationUnit','choice']);
   if(Object.entries(e.draft).some(([key,value])=>!fields.has(key)||typeof value!=='string'||value.length>64))return null;
   if(!['working','check_pending','credited'].includes(e.status)||!['answer','demonstration','complete'].includes(e.phase)||!['independent','self-corrected','scaffolded','demonstrated'].includes(e.support))return null;
-  if(!Number.isInteger(e.attempts)||e.attempts<0||e.attempts>4||!Number.isInteger(e.totalAttempts)||e.totalAttempts<e.attempts||e.totalAttempts>1000000||!Number.isInteger(e.checkSerial)||e.checkSerial<0||e.checkSerial>10000)return null;
+  if(!Number.isInteger(e.attempts)||e.attempts<0||e.attempts>1000000||!Number.isInteger(e.totalAttempts)||e.totalAttempts<e.attempts||e.totalAttempts>1000000||!Number.isInteger(e.checkSerial)||e.checkSerial<0||e.checkSerial>10000)return null;
   if(!Number.isFinite(e.startedAt)||e.startedAt<0||(e.feedback!==undefined&&(typeof e.feedback!=='string'||e.feedback.length>5000)))return null;
   if(e.status==='credited'?(e.phase!=='complete'||(!id.startsWith('practice:')&&!answered.includes(e.original.id))):e.phase==='complete')return null;
-  if(e.phase==='demonstration'&&(e.status!=='check_pending'||e.attempts!==4))return null;
+  if(e.phase==='demonstration'&&(e.status!=='check_pending'||(e.attempts!==4&&e.answerMode!=='teach')))return null;
   if(e.status==='working'&&(e.phase!=='answer'||e.checkSerial!==0))return null;
   if(e.status==='check_pending'&&e.checkSerial===0&&e.phase!=='demonstration')return null;
   const canonical=questions.get(id)||(id===`practice:${e.original.id}`?knownPracticeProblem(e.original):null);
@@ -114,7 +116,7 @@ function validatedLearningEntry(id,e,questions,answered){
   if(e.checkSerial>0&&(seen.length!==e.checkSerial+1||!seen.includes(problemFingerprint(canonical))))return null;
   const current=e.checkSerial?buildPracticeCheck(canonical,e.checkSerial,seen):canonical;
   if(canonicalJSON(current)!==canonicalJSON(e.current))return null;
-  return {key:id,original:JSON.parse(JSON.stringify(canonical)),current:JSON.parse(JSON.stringify(current)),status:e.status,phase:e.phase,attempts:e.attempts,totalAttempts:e.totalAttempts,checkSerial:e.checkSerial,errors:[...e.errors],draft:{...e.draft},startedAt:e.startedAt,support:e.support,...(e.feedback!==undefined?{feedback:e.feedback}:{}),...(seen.length?{seenFingerprints:[...seen]}:{})};
+  return {answerMode:modeOf(e.answerMode),masteryFirst:!!e.masteryFirst,key:id,original:JSON.parse(JSON.stringify(canonical)),current:JSON.parse(JSON.stringify(current)),status:e.status,phase:e.phase,attempts:e.attempts,totalAttempts:e.totalAttempts,checkSerial:e.checkSerial,errors:[...e.errors],draft:{...e.draft},startedAt:e.startedAt,support:e.support,...(e.feedback!==undefined?{feedback:e.feedback}:{}),...(seen.length?{seenFingerprints:[...seen]}:{})};
  }catch{return null;}
 }
 export const validSave=raw=>migrateSave(raw)!==null;
@@ -130,17 +132,19 @@ export function learningSession(save,problem,options={}){
 export function submitLearningAnswer(save,session,candidate,options={}){
  if(session.status==='credited')return {correct:true,alreadyCredited:true};
  if(session.phase==='demonstration')return {correct:false,demonstration:true};
- session.attempts++;session.totalAttempts++;
+ const mode=modeOf(options.answerMode);session.answerMode=mode;session.attempts++;session.totalAttempts++;
  if(answerCorrect(session.current,candidate)){
+  if(mode==='mastery'&&!session.masteryFirst){session.masteryFirst=true;session.phase='demonstration';nextLearningCheck(session);return {correct:false,transfer:true};}
   session.status='credited';session.phase='complete';
-  session.support=session.checkSerial?'demonstrated':session.totalAttempts===1?'independent':session.totalAttempts===2?'self-corrected':'scaffolded';
+  session.support=mode==='teach'?'scaffolded':mode==='mastery'&&session.totalAttempts===2?'independent':session.checkSerial?'demonstrated':session.totalAttempts===1?'independent':session.totalAttempts===2?'self-corrected':'scaffolded';
   if(!options.practice&&!save.answered.includes(session.original.id))save.answered.push(session.original.id);
   if(options.gateId&&!options.practice)completeGate(save,options.gateId);
   return {correct:true,credited:true};
  }
  session.support=session.checkSerial?'demonstrated':session.attempts===1?'self-corrected':'scaffolded';
  session.errors.push(taskHint(session.current,candidate).error);
- if(session.attempts>=4){session.status='check_pending';session.phase='demonstration';session.support='demonstrated';}
+ session.masteryFirst=false;
+ if(mode!=='independent'&&mode!=='mastery'&&session.attempts>=4){session.status='check_pending';session.phase='demonstration';session.support='demonstrated';}
  return {correct:false,demonstration:session.phase==='demonstration'};
 }
 export function nextLearningCheck(session){

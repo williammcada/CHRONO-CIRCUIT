@@ -1,3 +1,6 @@
+import {AdultLock} from './adult-lock.js';
+import {MODES,modeOf} from './answer-mode.js';
+import {sharpText} from './sharp-text.js';
 import {
   QUESTION_SEEDS, absolute, addMinutes, answerChoices,
   boundaryFlags, diagnose, equalTime, formatTime, generateProblem,
@@ -31,6 +34,12 @@ const interactButton = document.querySelector('[data-action="interact"]');
 const powerButton = document.querySelector('#power-control');
 const pauseButton = document.querySelector('#pause');
 ctx.imageSmoothingEnabled = false;
+const clearSharpText=sharpText(canvas,ctx);
+const adult=new AdultLock(localStorage);
+let dev=false,devBackup=null,debugBoxes=false;
+addEventListener('pagehide',()=>adult.lock());
+addEventListener('resize',()=>adult.lock());
+document.addEventListener('visibilitychange',()=>{if(document.hidden)adult.lock();});
 
 const COLORS = { navy:'#080d1d', floor:'#332c45', edge:'#c18a3d', brass:'#80542b', cyan:'#72f1ec', orange:'#ef7b35', violet:'#6b4a9e', cream:'#fff3d1', amber:'#ffce78', danger:'#ff5d48' };
 
@@ -48,6 +57,7 @@ function loadSave() {
 }
 
 function persist() {
+  if(dev)return;
   save.records = save.records.slice(-160);
   try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); storageAvailable = true; }
   catch { storageAvailable = false; }
@@ -114,7 +124,7 @@ function enterRoom(index, preserveHealth = true) {
 
 function startNew(){const records=save.records,run=save.run+1;save=freshSave(save.settings);save.records=records;save.run=run;persist();showStageSelect();}
 function continueGame(stage=save.stage){const s=stageFor(typeof stage==='string'?stage:save.stage),route=save.routes[s.id];if(route.complete||!route.started){beginStage(s.id);return;}state.screen='play';closeOverlay();enterRoom(route.room,false);audio.start();}
-function beginStage(id){const s=stageFor(id);startStageRun(save,s.id);state.screen='play';closeOverlay();enterRoom(s.start,false);audio.start();}
+function beginStage(id){const s=stageFor(id);startStageRun(save,s.id);if(dev)save.solved=[...GATE_IDS];state.screen='play';closeOverlay();enterRoom(s.start,false);audio.start();}
 
 function fitCanvas(){
   const viewport=window.visualViewport;
@@ -146,10 +156,11 @@ function bindAll(selector,event,handler){overlay.querySelectorAll(selector).forE
 
 const KEYBOARD_HELP='<kbd>← →</kbd> / <kbd>A D</kbd> Run · <kbd>Space</kbd> / <kbd>Z</kbd> Jump · <kbd>X</kbd> / <kbd>J</kbd> Fire · <kbd>↑ ↓</kbd> Climb · <kbd>E</kbd> Time · <kbd>C</kbd> Power · <kbd>Q</kbd> Swap · <kbd>Esc</kbd> Pause';
 function showTitle(){
+ if(dev){save=devBackup;devBackup=null;dev=false;debugBoxes=false;}adult.lock();
  state.screen='title';state.boss=null;updateHud();
  showOverlay(`<p class="eyebrow">EIGHT CIRCUITS · v${BUILD}</p><h1 class="title-mark">CHRONO<br><span class="logo-circuit">CIRCUIT</span></h1><p>Run. Jump. Control time.<br>Restore the clocks. Face the guardian.</p><div class="menu"><button class="button primary" id="select">STAGE SELECT</button><button class="button warm" id="continue" ${save.bestRoom||save.solved.length?'':'disabled'}>CONTINUE RUN</button><button class="button ghost" id="practice">PRACTICE RELAY</button><button class="button ghost" id="settings">SETTINGS</button><button class="button ghost" id="report">GROWN-UP REPORT</button></div><p class="keyboard-help">${KEYBOARD_HELP}</p>${storageAvailable?'':'<p class="small">Progress saving is unavailable in this browser mode.</p>'}`,true);
  overlay.firstElementChild.classList.add('title-panel');
- bind('#select','click',()=>showStageSelect());bind('#continue','click',continueGame);bind('#practice','click',showPracticeMenu);bind('#settings','click',()=>showSettings(showTitle));bind('#report','click',()=>showReport(showTitle));
+ bind('#select','click',()=>showStageSelect());bind('#continue','click',continueGame);bind('#practice','click',showPracticeMenu);bind('#settings','click',()=>showSettings(showTitle));bind('#report','click',()=>adultLogin(showTitle,()=>showReport(showTitle)));
 }
 
 
@@ -183,14 +194,16 @@ function showPause(){
  state.screen='pause';persist();const s=stageFor(state.stage),weapons=ownedPowers(save);
  showOverlay(`<p class="eyebrow">${s.name} · ${state.room-s.start+1} / ${s.end-s.start+1}</p><h2>PAUSED</h2><p>${stageSolved(save,state.stage)} / 3 gates restored</p>${weapons.length?`<p class="small">Equip a power · ${save.energy}/8 energy · Q or SWAP cycles during play</p><div class="weapon-grid">${weapons.map(id=>`<button class="button ${save.equipped===id?'primary':'ghost'}" data-weapon="${id}">${POWERS[id].name}</button>`).join('')}</div>`:''}<p class="keyboard-help">${KEYBOARD_HELP}</p><div class="menu"><button class="button primary" id="resume">RESUME</button><button class="button" id="retry">RETRY CHECKPOINT</button><button class="button" id="settings">SETTINGS</button><button class="button" id="report">GROWN-UP REPORT</button><button class="button ghost" id="select">SAVE & STAGE SELECT</button></div>`);
  bindAll('[data-weapon]','click',e=>{save.equipped=e.currentTarget.dataset.weapon;persist();showPause();});
- bind('#resume','click',resumePlay);bind('#retry','click',()=>{resumePlay();enterRoom(save.checkpoint,false);});bind('#settings','click',()=>showSettings(showPause));bind('#report','click',()=>showReport(showPause));bind('#select','click',()=>showStageSelect(state.stage));
+ if(dev){overlay.querySelector('.menu').insertAdjacentHTML('beforeend','<button class="button" id="devtools">DEV TOOLS</button>');bind('#devtools','click',()=>adultLogin(showPause,()=>adultPanel(showPause)));}
+ bind('#resume','click',resumePlay);bind('#retry','click',()=>{resumePlay();enterRoom(save.checkpoint,false);});bind('#settings','click',()=>showSettings(showPause));bind('#report','click',()=>adultLogin(showPause,()=>showReport(showPause)));bind('#select','click',()=>showStageSelect(state.stage));
 }
 
 function showSettings(back) {
   state.screen='settings';
   const s=save.settings;
   showOverlay(`<p class="eyebrow">PLAYER OPTIONS · v${BUILD}</p><h2>SETTINGS</h2><div class="settings"><label class="toggle"><input type="checkbox" data-setting="assist" ${s.assist?'checked':''}> Action assist</label><label class="toggle"><input type="checkbox" data-setting="showHints" ${s.showHints?'checked':''}> Helpful prompts</label><label class="toggle"><input type="checkbox" data-setting="reducedMotion" ${s.reducedMotion?'checked':''}> Reduced motion</label><label class="toggle"><input type="checkbox" data-setting="contrast" ${s.contrast?'checked':''}> High contrast</label><label class="toggle"><input type="checkbox" data-setting="musicMute" ${s.musicMute?'checked':''}> Mute music</label><label class="toggle"><input type="checkbox" data-setting="effectsMute" ${s.effectsMute?'checked':''}> Mute effects</label><label class="toggle">Music volume <input type="range" min="0" max="1" step=".1" value="${s.musicVolume}" data-setting="musicVolume"></label><label class="toggle">Effects volume <input type="range" min="0" max="1" step=".1" value="${s.effectsVolume}" data-setting="effectsVolume"></label><label class="toggle"><input type="checkbox" data-setting="narration" ${s.narration?'checked':''}> Read questions aloud</label><label class="toggle"><input type="checkbox" data-setting="touchControls" ${s.touchControls?'checked':''}> Always show touch controls</label><label class="toggle">Practice math <select data-setting="band"><option value="story">Story level</option><option value="quarters">Quarter hours</option><option value="backward">Backward time</option><option value="24hour">24-hour clock</option><option value="tidal">Timetables & connections</option><option value="garden">Multi-step journeys</option><option value="prism">Comparing durations</option><option value="fair">Minutes & seconds</option><option value="mixed">All stage skills</option></select></label></div><p class="small">Action assist gives longer warnings and damage recovery. The math stays the same.</p><div class="menu"><button class="button primary" id="done">DONE</button></div>`);
-  overlay.querySelector('.settings').insertAdjacentHTML('afterbegin',`<label class="toggle">Questions per gate <select data-setting="questionsPerGate" aria-label="Questions per gate">${Array.from({length:10},(_,i)=>`<option value="${i+1}" ${s.questionsPerGate===i+1?'selected':''}>${i+1}${i===1?' (default)':''}</option>`).join('')}</select></label><p class="small">Applies to new stage runs and replays. A run already in progress keeps its question count.</p>`);
+  overlay.querySelector('.settings').insertAdjacentHTML('beforeend','<button class="button" id="adult-settings">ADULT SETTINGS</button>');
+  bind('#adult-settings','click',()=>adultLogin(back));
   overlay.querySelector('[data-setting="band"]').value=s.band;
   bindAll('[data-setting]','change',(event)=>{const key=event.target.dataset.setting;save.settings[key]=key==='questionsPerGate'?gateQuestionCount(event.target.value):event.target.type==='checkbox'?event.target.checked:event.target.type==='range'?Number(event.target.value):event.target.value;save.settings.mute=false;document.body.classList.toggle('high-contrast',save.settings.contrast);document.body.classList.toggle('reduced-motion',save.settings.reducedMotion);persist();fitCanvas();audio.start();});
   bind('#done','click',back);
@@ -206,12 +219,12 @@ function escapeHTML(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&am
 
 function showReport(back) {
   state.screen='report';const rows=masteryRows();const total=save.records.length;const independent=save.records.filter((r)=>r.support==='independent').length;const common=Object.create(null);for(const r of save.records)for(const e of r.errors||[])common[e]=(common[e]||0)+1;const next=Object.entries(common).sort((a,b)=>b[1]-a[1])[0]?.[0]?.replaceAll('-',' ')||'No misconception pattern yet';
-  showOverlay(`<p class="eyebrow">LOCAL LEARNING RECORD</p><h2>GROWN-UP REPORT</h2><p>${total} completed time challenges · ${independent} independent</p><table class="report"><thead><tr><th>Skill</th><th>Recent</th><th>Independent</th><th>Score</th></tr></thead><tbody>${rows.length?rows.map((r)=>`<tr><td>${escapeHTML(r.skill)}${r.secure?' <span class="tag secure">secure</span>':''}</td><td>${r.records.length}</td><td>${r.independent}</td><td>${r.score}%</td></tr>`).join(''):'<tr><td colspan="4">Play a challenge to begin the report.</td></tr>'}</tbody></table><p><strong>Most useful next focus:</strong> ${escapeHTML(next)}</p><p class="small">Records stay on this device. No name, account, or analytics are used.</p><div class="menu"><button class="button" id="export">EXPORT JSON</button><label class="button ghost" for="import">IMPORT JSON</label><input class="sr-only" id="import" type="file" accept="application/json"><button class="button primary" id="done">DONE</button></div><div id="import-status" class="feedback" hidden></div>`,true);
+  showOverlay(`<p class="eyebrow">LOCAL LEARNING RECORD</p><h2>GROWN-UP REPORT</h2><p>${total} completed time challenges · ${independent} independent</p><table class="report"><thead><tr><th>Skill</th><th>Recent</th><th>Independent</th><th>Score</th></tr></thead><tbody>${rows.length?rows.map((r)=>`<tr><td>${escapeHTML(r.skill)}${r.secure?' <span class="tag secure">secure</span>':''}</td><td>${r.records.length}</td><td>${r.independent}</td><td>${r.score}%</td></tr>`).join(''):'<tr><td colspan="4">Play a challenge to begin the report.</td></tr>'}</tbody></table><p class="small">Answer modes: ${MODES.map(m=>`${m}: ${save.records.filter(r=>r.answerMode===m).length}`).join(" · ")}. Earlier records without a mode are retained.</p><p><strong>Most useful next focus:</strong> ${escapeHTML(next)}</p><p class="small">Records stay on this device. No name, account, or analytics are used.</p><div class="menu"><button class="button" id="export">EXPORT JSON</button><label class="button ghost" for="import">IMPORT JSON</label><input class="sr-only" id="import" type="file" accept="application/json"><button class="button primary" id="done">DONE</button></div><div id="import-status" class="feedback" hidden></div>`,true);
   bind('#done','click',back);bind('#export','click',exportSave);bind('#import','change',(event)=>importSave(event,()=>showReport(back)));
 }
 
 function exportSave(){const blob=new Blob([JSON.stringify(save,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chrono-circuit-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}
-async function importSave(event,done){const status=overlay.querySelector('#import-status');status.hidden=false;try{const file=event.target.files[0];if(!file||file.size>1024*1024)throw Error('Choose a progress JSON file smaller than 1 MB.');const parsed=migrateSave(JSON.parse(await file.text()));if(!parsed)throw Error('That file is not a valid Chrono Circuit report.');save=parsed;document.body.classList.toggle('high-contrast',save.settings.contrast);document.body.classList.toggle('reduced-motion',save.settings.reducedMotion);persist();fitCanvas();status.textContent='Progress restored.';setTimeout(done,500);}catch(error){status.textContent=error.message||'Could not import that file.';status.classList.add('hint');}}
+async function importSave(event,done){if(!adult.unlocked){adultLogin(showTitle);return;}const status=overlay.querySelector('#import-status');status.hidden=false;try{const file=event.target.files[0];if(!file||file.size>1024*1024)throw Error('Choose a progress JSON file smaller than 1 MB.');const parsed=migrateSave(JSON.parse(await file.text()));if(!parsed)throw Error('That file is not a valid Chrono Circuit report.');parsed.settings.answerMode=save.settings.answerMode;parsed.settings.stageModes=save.settings.stageModes;parsed.settings.questionsPerGate=save.settings.questionsPerGate;save=parsed;document.body.classList.toggle('high-contrast',save.settings.contrast);document.body.classList.toggle('reduced-motion',save.settings.reducedMotion);persist();fitCanvas();status.textContent='Progress restored.';setTimeout(done,500);}catch(error){status.textContent=error.message||'Could not import that file.';status.classList.add('hint');}}
 
 function showPracticeMenu(){state.screen='practice-menu';showOverlay(`<p class="eyebrow">FIVE QUICK CHALLENGES</p><h2>PRACTICE RELAY</h2><p>Pick a time skill. There are no hazards and mistakes cost nothing.</p><div class="menu stack"><button class="button" data-band="story">WHOLE HOURS & MIXED TIME</button><button class="button" data-band="quarters">QUARTER PAST / HALF PAST / QUARTER TO</button><button class="button" data-band="backward">GOING BACKWARD</button><button class="button" data-band="24hour">24-HOUR CLOCK</button><button class="button" data-band="tidal">TIMETABLES & CONNECTIONS</button><button class="button" data-band="garden">MULTI-STEP JOURNEYS</button><button class="button" data-band="prism">COMPARE DURATIONS</button><button class="button" data-band="fair">MINUTES & SECONDS</button><button class="button" data-band="mixed">MIX ALL EIGHT STAGES</button><button class="button ghost" id="back">BACK</button></div>`);bindAll('[data-band]','click',(event)=>{save.settings.band=event.currentTarget.dataset.band;persist();state.practice=true;state.practiceCount=0;state.practiceSeed=save.records.length%PROBLEMS.length;nextPractice();});bind('#back','click',showTitle);}
 function nextPractice(){
@@ -233,6 +246,7 @@ function showPracticeResults(){state.practice=false;state.screen='practice-resul
 function openMath(problem,onComplete,options={}){
  if(state.boss&&!options.practice)return;
  state.screen='math';
+ options.answerMode=options.practice?modeOf(save.settings.answerMode):modeOf(save.routes[state.stage]?.answerMode);
  return openGateUI({problem,options,getSave:()=>save,persist,showOverlay,overlay,audio,
   onExit:()=>{window.speechSynthesis?.cancel();if(options.practice)showPracticeMenu();else{resumePlay();state.player.invulnerable=1;}},
   onComplete:result=>{closeOverlay();state.screen=options.practice?'practice-wait':'play';onComplete(result);}
@@ -254,6 +268,7 @@ function solveTerminal(index){
 }
 
 function update(dt){
+  if(dev&&!adult.unlocked&&state.screen==='play'){adultLogin(showTitle,resumePlay);return;}
   pollGamepad();
   if(state.screen==='power-demo'){state.demoTime+=dt;drawPowerDemo();input.pressed.clear();return;}
   if(state.screen==='boss-victory'){state.roomTime+=dt;state.victoryTimer-=dt;updateParticles(dt);if(state.victoryTimer<=0)showResults();input.pressed.clear();return;}
@@ -358,7 +373,7 @@ function pollGamepad(){
 }
 function hitBox(ax,ay,aw,ah,bx,by,bw,bh){return ax<bx+bw&&ax+aw>bx&&ay<by+bh&&ay+ah>by;}
 
-function draw(){ctx.save();if(state.shake>0)ctx.translate(Math.round((Math.random()-.5)*3),Math.round((Math.random()-.5)*3));drawBackdrop();if(state.screen!=='title'&&state.player)drawWorld();ctx.restore();updateHud();state.raf=requestAnimationFrame(loop);}
+function draw(){clearSharpText();ctx.save();if(state.shake>0)ctx.translate(Math.round((Math.random()-.5)*3),Math.round((Math.random()-.5)*3));drawBackdrop();if(state.screen!=='title'&&state.player)drawWorld();ctx.restore();updateHud();state.raf=requestAnimationFrame(loop);}
 function drawBackdrop(){if(state.stage!=='foundry'&&state.screen!=='title'){drawScenery(ctx,state.stage,save.settings.reducedMotion?0:state.roomTime,state.camera);return;}if(images.backdrop.complete&&images.backdrop.naturalWidth){const sw=1536,sh=864,sy=80;ctx.drawImage(images.backdrop,0,sy,sw,sh,0,0,320,180);}else{ctx.fillStyle=COLORS.navy;ctx.fillRect(0,0,320,180);}ctx.fillStyle='#07102644';ctx.fillRect(0,0,320,180);}
 function drawWorld(){
  const room=ROOMS[state.room];ctx.save();ctx.translate(-Math.round(state.camera.x),-Math.round(state.camera.y));
@@ -386,7 +401,7 @@ function drawWorld(){
  drawPlayer(state.player);drawParticles();
  if(state.brake>0){ctx.strokeStyle=COLORS.cyan;ctx.lineWidth=1;ctx.beginPath();ctx.arc(state.player.x+7,state.player.y+14,20,0,Math.PI*2);ctx.stroke();}
  ctx.restore();
- ctx.fillStyle='#081126e8';ctx.fillRect(0,0,320,17);ctx.fillStyle=COLORS.cream;ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText(room.name,160,11);
+ ctx.fillStyle='#081126e8';ctx.fillRect(0,0,320,17);ctx.fillStyle=COLORS.cream;ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText((dev?'DEV · ':'')+room.name,160,11);
  if(state.boss){const b=state.boss;ctx.fillStyle='#150b25';ctx.fillRect(91,20,138,10);ctx.fillStyle=COLORS.violet;ctx.fillRect(93,22,134*b.hp/b.max,6);ctx.strokeStyle=COLORS.amber;ctx.strokeRect(91,20,138,10);}
  if(state.transition>0){ctx.fillStyle=`rgba(3,8,20,${Math.min(.85,state.transition*3)})`;ctx.fillRect(0,0,320,180);}
 }
@@ -401,18 +416,18 @@ function drawMachineHazard(h){
 function drawPlatform(x,y,w,h){const theme=THEMES[state.stage];x=Math.round(x);y=Math.round(y);ctx.fillStyle='#071020';ctx.fillRect(x-1,y-1,w+2,h+2);ctx.fillStyle=theme.floor;ctx.fillRect(x,y,w,h);ctx.fillStyle=theme.edge;ctx.fillRect(x,y,w,3);ctx.fillStyle=theme.dark;for(let i=x+6;i<x+w;i+=12){ctx.fillRect(i,y+7,5,5);ctx.fillStyle=theme.edge;ctx.fillRect(i+1,y+8,2,2);ctx.fillStyle=theme.dark;}}
 function drawHazard(x,y,w,h){if(state.stage==='sky'){ctx.fillStyle='#beeaf433';ctx.fillRect(x,y,w,h);return;}const theme=THEMES[state.stage];ctx.fillStyle=theme.dark;ctx.fillRect(x,y,w,h);const glow=save.settings.reducedMotion?.7:(Math.sin(state.roomTime*7)+1)/2;ctx.fillStyle=state.stage==='foundry'?`rgba(255,91,45,${.55+glow*.35})`:theme.light;for(let i=x+2;i<x+w;i+=6){ctx.beginPath();ctx.moveTo(i,y+h);ctx.lineTo(i+3,y+2);ctx.lineTo(i+6,y+h);ctx.fill();}}
 function drawTerminal(x,y,solved){ctx.fillStyle='#17182c';ctx.fillRect(x-9,y,20,39);ctx.fillStyle=solved?COLORS.cyan:'#67708c';ctx.fillRect(x-7,y+2,16,16);ctx.fillStyle='#081126';ctx.beginPath();ctx.arc(x+1,y+10,6,0,Math.PI*2);ctx.fill();ctx.strokeStyle=solved?COLORS.cyan:COLORS.amber;ctx.lineWidth=2;ctx.beginPath();ctx.arc(x+1,y+10,5,0,Math.PI*2);ctx.stroke();ctx.beginPath();ctx.moveTo(x+1,y+10);ctx.lineTo(x+1,y+6);ctx.moveTo(x+1,y+10);ctx.lineTo(x+5,y+12);ctx.stroke();if(!solved&&Math.abs(state.player.x-x)<34){ctx.fillStyle=COLORS.cyan;ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText('TIME',x+1,y-5);}}
-function drawEnemy(e){drawEnemyTelegraph(ctx,e);drawRobot(ctx,e,state.roomTime);}
+function drawEnemy(e){if(dev&&debugBoxes)drawEnemyTelegraph(ctx,e);if(e.action==='field'){ctx.save();ctx.strokeStyle='#72f1ec';for(let i=0;i<7;i++){const dx=((state.roomTime*45+i*13)%72)+18;for(const sign of [-1,1]){ctx.beginPath();ctx.moveTo(e.x+e.w/2+sign*dx,e.y+12);ctx.lineTo(e.x+e.w/2+sign*(dx-5),e.y+15);ctx.lineTo(e.x+e.w/2+sign*dx,e.y+18);ctx.stroke();}}ctx.restore();}drawRobot(ctx,e,state.roomTime);}
 function drawPlayer(p){if(p.invulnerable>0&&Math.floor(p.invulnerable*16)%2===0)return;drawTempo(ctx,p,state.roomTime);}
 function drawBoss(b){
- drawGuardianTelegraph(ctx,b);
+ if(dev&&debugBoxes)drawGuardianTelegraph(ctx,b);
  if(b.kind!=='pendula'){
-  if(b.kind==='railox'&&b.phase==='telegraph'){
+  if(dev&&debugBoxes&&b.kind==='railox'&&b.phase==='telegraph'){
    ctx.fillStyle='#ffbc6970';
    if(b.attack===0){ctx.fillRect(24,148,270,3);ctx.fillStyle=COLORS.amber;ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText('JUMP TO A HIGH LEDGE',160,54);}
    if(b.attack===1){ctx.fillRect(b.targetX,147,b.w,4);ctx.strokeStyle='#ffbc69';ctx.setLineDash([3,4]);ctx.strokeRect(b.targetX,103,b.w,44);ctx.setLineDash([]);ctx.fillStyle=COLORS.amber;ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText('STAY LOW · WATCH THE LANDING',160,54);}
    if(b.attack===2){ctx.fillStyle=COLORS.amber;ctx.font='bold 7px monospace';ctx.textAlign='center';ctx.fillText('GET ABOVE THE FLOOR PULSES',160,54);}
   }
-  if(b.kind==='vesper'&&b.attack===1&&b.phase==='telegraph'){ctx.fillStyle='#ffdc7777';ctx.fillRect(b.lockX,149,b.w,3);ctx.setLineDash([3,4]);ctx.strokeStyle='#ffdc77';ctx.strokeRect(b.lockX,38,b.w,111);ctx.setLineDash([]);}
+  if(dev&&debugBoxes&&b.kind==='vesper'&&b.attack===1&&b.phase==='telegraph'){ctx.fillStyle='#ffdc7777';ctx.fillRect(b.lockX,149,b.w,3);ctx.setLineDash([3,4]);ctx.strokeStyle='#ffdc77';ctx.strokeRect(b.lockX,38,b.w,111);ctx.setLineDash([]);}
   if(!(b.hitCooldown>0&&Math.floor(b.hitCooldown*30)%2))drawGuardian(ctx,b,state.roomTime);
   ctx.textAlign='center';ctx.font='bold 8px monospace';ctx.fillStyle=COLORS.amber;
   if(b.warning>0)ctx.fillText(GUARDIAN_ATTACKS[b.kind][b.attack],160,43);
@@ -422,7 +437,7 @@ function drawBoss(b){
  }
  if(b.defeated){drawGuardian(ctx,b,state.roomTime);return;}
  if(b.attack===0||b.phase==='intro'){ctx.strokeStyle=COLORS.amber;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(160,33);ctx.lineTo(b.x+20,b.y);ctx.stroke();}
- for(const d of b.drops){ctx.fillStyle=b.phase==='telegraph'?'#ffc95eaa':'#ff5d4899';ctx.fillRect(d.x-5,148,30,3);if(b.phase==='telegraph'){ctx.fillStyle=COLORS.amber;ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('!',d.x+10,135);}if(d.y<174){drawPlatform(d.x,d.y,d.w,d.h);ctx.fillStyle=COLORS.violet;ctx.fillRect(d.x+5,d.y+4,10,12);}}
+ for(const d of b.drops){ctx.fillStyle=b.phase==='telegraph'?'#ffc95eaa':'#ff5d4899';if(dev&&debugBoxes)ctx.fillRect(d.x-5,148,30,3);if(b.phase==='telegraph'){ctx.fillStyle=COLORS.amber;ctx.font='bold 9px monospace';ctx.textAlign='center';ctx.fillText('!',d.x+10,135);}if(d.y<174){drawPlatform(d.x,d.y,d.w,d.h);ctx.fillStyle=COLORS.violet;ctx.fillRect(d.x+5,d.y+4,10,12);}}
  const key=b.phase==='recovery'?'bossOpen':b.phase==='active'?'bossAttack':'boss';
  if(!(b.hitCooldown>0&&Math.floor(b.hitCooldown*30)%2))drawGuardian(ctx,b,state.roomTime);
  if(b.warning>0){ctx.fillStyle=COLORS.amber;ctx.font='bold 8px monospace';ctx.textAlign='center';ctx.fillText(GUARDIAN_ATTACKS.pendula[b.attack],160,43);}
@@ -473,3 +488,20 @@ for(const img of Object.values(images))img.addEventListener('error',()=>showToas
 showOverlay('<p class="eyebrow">CHRONO CIRCUIT · v'+BUILD+'</p><h2>WINDING UP…</h2><p>Loading Tempo and the eight guardians.</p>');
 const bootReady=Promise.allSettled([preloadTempoArt(),preloadActorArt(),preloadScenery()]).then(results=>{showTitle();if(results.some(r=>r.status==='rejected'))showToast('Some artwork could not load. Refresh to try again.',4000);state.lastTime=performance.now();state.raf=requestAnimationFrame(loop);});
 if('serviceWorker' in navigator&&location.protocol.startsWith('http'))navigator.serviceWorker.register('./sw.js',{updateViaCache:'none'}).then(reg=>reg.update()).catch(()=>{});
+
+function adultLogin(back,success=()=>adultPanel(back)){
+ state.screen='adult';clearInput();
+ showOverlay('<h2>ADULT ACCESS</h2><label>Password<input id="adult-pass" type="password" autocomplete="current-password"></label><p id="adult-error" role="status"></p><div class="menu"><button class="button primary" id="unlock">UNLOCK</button><button class="button" id="cancel">BACK</button></div>');
+ const unlock=async()=>{const button=overlay.querySelector('#unlock');button.disabled=true;try{if(await adult.unlock(overlay.querySelector('#adult-pass').value))success();else{overlay.querySelector('#adult-error').textContent=Date.now()<adult.blockedUntil?'Wait 30 seconds before trying again.':'Password not accepted.';button.disabled=false;}}catch{overlay.querySelector('#adult-error').textContent='Adult access requires HTTPS and browser storage.';button.disabled=false;}};
+ bind('#unlock','click',unlock);bind('#adult-pass','keydown',e=>{if(e.key==='Enter')unlock();});bind('#cancel','click',()=>{adult.lock();back();});
+}
+function adultPanel(back){
+ state.screen='adult';if(!adult.unlocked)return adultLogin(back);
+ const select=(id,value,inherit=false)=>`<select id="${id}">${inherit?'<option value="">Use global mode</option>':''}${MODES.map(m=>`<option value="${m}" ${m===value?'selected':''}>${m.toUpperCase()}</option>`).join('')}</select>`;
+ showOverlay(`<h2>ADULT SETTINGS</h2><p>Changes apply to new runs. DEV runs do not save progress.</p><label>Answer mode ${select('adult-mode',save.settings.answerMode)}</label><label>Questions per gate<input id="adult-count" type="number" min="1" max="10" value="${save.settings.questionsPerGate}"></label><details><summary>Stage overrides</summary>${STAGES.map(s=>`<label>${s.name}${select('mode-'+s.id,save.settings.stageModes?.[s.id]||'',true)}</label>`).join('')}</details><label>New password (optional)<input id="new-password" type="password" autocomplete="new-password"></label><p id="adult-status" role="status"></p><div class="menu"><button class="button primary" id="adult-save">SAVE SETTINGS</button><button class="button" id="dev-start">${dev?'EXIT DEV AND RESTORE SAVE':'ENTER DEV MODE'}</button><button class="button" id="adult-back">LOCK AND BACK</button></div>${dev?`<label>Jump to room<select id="dev-room">${ROOMS.map((r,i)=>`<option value="${i}">${r.stage} · ${r.name}</option>`).join('')}</select></label><label><input type="checkbox" id="dev-boxes" ${debugBoxes?'checked':''}>Debug hitboxes</label><div class="menu"><button class="button" id="dev-jump">LOAD ROOM / RESET ENCOUNTER</button><button class="button" id="dev-refill">REFILL HEALTH AND ENERGY</button></div>`:''}`,true);
+ bind('#adult-save','click',async()=>{if(!adult.unlocked)return adultLogin(back);const count=Number(overlay.querySelector('#adult-count').value);if(!Number.isInteger(count)||count<1||count>10){overlay.querySelector('#adult-status').textContent='Choose 1–10 questions.';return;}try{const password=overlay.querySelector('#new-password').value;if(password)await adult.change(password);save.settings.answerMode=modeOf(overlay.querySelector('#adult-mode').value);save.settings.questionsPerGate=count;save.settings.stageModes=Object.fromEntries(STAGES.map(s=>[s.id,overlay.querySelector('#mode-'+s.id).value]).filter(([,v])=>v));persist();overlay.querySelector('#adult-status').textContent='Saved for new runs.';}catch(e){overlay.querySelector('#adult-status').textContent=e.message;}});
+ bind('#adult-back','click',()=>{adult.lock();back();});
+ bind('#dev-start','click',()=>{if(!adult.unlocked)return adultLogin(back);if(dev){dev=false;debugBoxes=false;save=devBackup;devBackup=null;adult.lock();showTitle();return;}devBackup=save;save=structuredClone(save);dev=true;save.solved=[...GATE_IDS];save.weapons=Object.keys(POWERS);save.energy=8;adultPanel(back);});
+ bind('#dev-jump','click',()=>{if(!adult.unlocked)return adultLogin(back);debugBoxes=overlay.querySelector('#dev-boxes').checked;save.solved=[...GATE_IDS];state.screen='play';const room=Number(overlay.querySelector('#dev-room').value);closeOverlay();enterRoom(room,false);});
+ bind('#dev-refill','click',()=>{if(!adult.unlocked)return adultLogin(back);if(state.player)state.player.hearts=5;save.energy=8;overlay.querySelector('#adult-status').textContent='Health and energy restored.';});
+}

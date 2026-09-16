@@ -50,7 +50,7 @@ export function moveActor(p,dt,platforms,room,held,pressed){
  if(!held.get('jump')&&p.vy<0&&!jumped)p.vy=Math.max(p.vy,-106);
  p.vy+=GRAVITY*dt;
  const wind=p.onGround?0:(room.wind||[]).filter(w=>p.x+p.w>w.x&&p.x<w.x+w.w).reduce((n,w)=>n+w.force,0);
- const oldX=p.x,external=p.onGround?0:clamp(p.externalPush||0,-32,32);p.externalPush=0;
+ const oldX=p.x,external=(p.onGround?0:clamp(p.externalPush||0,-32,32))+clamp(p.magnetPush||0,-48,48);p.externalPush=0;p.magnetPush=0;
  p.x=clamp(p.x+(p.vx+wind+external)*dt,0,room.width-p.w);
  // New solids opt in. Every v0.6 platform keeps its original one-way behavior.
  for(const s of platforms.filter(s=>s.solid&&!s.hidden))if(overlap(p,s)){

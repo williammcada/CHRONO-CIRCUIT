@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const noop=()=>{};
-const moduleNames=['time-engine','curriculum','controls','stage-data','progress','gate-questions','physics','powers','bosses','portraits','combat','actor-art','hero-art','scenery','gate-ui','world-mechanisms','projectile-system'];
+const moduleNames=['time-engine','curriculum','controls','stage-data','progress','gate-questions','physics','powers','bosses','portraits','combat','actor-art','hero-art','scenery','gate-ui','world-mechanisms','projectile-system','answer-mode','adult-lock'];
 
 // Exercise the shipped application in an isolated VM; only browser, audio, and timers
 // are replaced. Test handles are appended in memory and never shipped to players.
@@ -72,7 +72,7 @@ export async function game(options={}){
  document={body,documentElement:root,querySelector:selector=>query(selector)[0]||null,querySelectorAll:selector=>query(selector),createElement:tag=>{const n=element('created-'+nodes.size);n.tagName=tag.toUpperCase();return n;},addEventListener:(name,fn)=>events.set('document:'+name,fn),activeElement:null,hidden:false};
  const audio=class{start(){} jump(){} fire(){} hit(){} good(){} wrong(){} tick(){}};
  const context=vm.createContext({...modules,console,performance,Math,Date,JSON,Promise,URL,Blob,Set,Map,
-  Soundtrack:audio,Image:options.Image||class{addEventListener(){}},
+  sharpText:()=>noop,structuredClone,Soundtrack:audio,Image:options.Image||class{addEventListener(){}},
   preloadTempoArt:async()=>{},preloadActorArt:async()=>{},preloadScenery:async()=>{},
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document,
   window:{matchMedia:()=>({matches:!!options.touch}),speechSynthesis:{cancel:noop},visualViewport:undefined},
@@ -80,7 +80,7 @@ export async function game(options={}){
   addEventListener:(name,fn)=>events.set(name,fn),requestAnimationFrame:noop,clearTimeout:noop,setTimeout:(fn,ms)=>{timers.push({fn,ms});return timers.length;},
  });
  const source=readFileSync(new URL('../public/game.js',import.meta.url),'utf8').replace(/import\s[\s\S]*?from ['"][^'"]+['"];\n/g,'');
- vm.runInContext(source+'\nthis.game={state,input,bootReady,images,get save(){return save;},enterRoom,beginStage,continueGame,update,getPlatforms,updateBoss,updateBullets,showResults,solveTerminal,openMath,ROOMS,showStageSelect,showPowerDemo,showTitle,draw,fitCanvas,showPause,showSettings,showPracticeMenu,nextPractice,showIntro,drawWorld,drawBoss,drawPowerDemo,persist,resumePlay};',context);
+ vm.runInContext(source+'\nthis.game={state,input,bootReady,images,get save(){return save;},enterRoom,beginStage,continueGame,update,getPlatforms,updateBoss,updateBullets,showResults,solveTerminal,openMath,ROOMS,showStageSelect,showPowerDemo,showTitle,draw,fitCanvas,showPause,showSettings,showPracticeMenu,nextPractice,showIntro,drawWorld,drawBoss,drawPowerDemo,persist,resumePlay,adult,adultPanel,adultLogin,get dev(){return dev;}};',context);
  await context.game.bootReady;
  return Object.assign(context.game,{events,nodes,timers,storage,context,document,modules,
   flushTimers(){const pending=timers.splice(0);for(const t of pending)t.fn();},

@@ -1,97 +1,83 @@
 # Project Brief — CHRONO CIRCUIT
 
-**Brief status:** Migration baseline / requires source verification where noted  
-**Brief version:** 0.1  
-**Last updated:** 18 September 2026  
-**Owner:** William McAda  
-**Product credit:** A WILLIAM MCADA PRODUCT  
-**Handbook repository:** `williammcada/mcada-project-handbook`  
-**Handbook baseline:** `6557a45aaa6d29d7d1abde808e6d0ac248b08820 (AI-START-HERE.md); UNIVERSAL-RULES.md @ aed6fe311aa2e88983f862a30a2d8f05d2ffc04d`  
-**Repository:** `williammcada/CHRONO-CIRCUIT`  
-**Canonical source status:** Existing GitHub repository. Current latest commit observed during migration: `54a5d5171ed652731ced87fab83e1ae8dca1634c`. The repository README identifies v0.8.0.  
-**Current project state:** Existing deployed v0.8 codebase. The repository reports 338 automated checks passed for the release; physical Safari remained unverified in that release note.
+**Brief version:** 0.2 — audited documentation revision  
+**Owner:** William McAda · **Credit:** A WILLIAM MCADA PRODUCT  
+**Status:** Revised record for owner review; not an application release or fresh feature approval.  
+**Repository destination:** williammcada/CHRONO-CIRCUIT (verify existence/current branch before source edits).  
+**Current running version:** Not independently verified in this documentation task.  
+**Source/baseline:** Historical repository candidate 54a5d5171ed652731ced87fab83e1ae8dca1634c labels v0.8.0. User observed hosted v0.7 appearance and missing options. Current deployed version is UNVERIFIED, not asserted v0.8.  
+**Next work:** Reconcile v0.8 source/build/deployment, preserving accepted game features.
 
-## 1. Purpose and audience
+## 1. Purpose, audience and detailed scope
 
-CHRONO CIRCUIT is a touch-first action-platform game for practicing time arithmetic through math gates, stages, bosses, earned powers, and multiple instructional answer modes.
+- Retro action-platform time-arithmetic game for a child/student; landscape touch-first iPad, desktop keyboard, iPhone where tested. Earlier gamepad support is recorded and should be checked before removal.
+- Core controls Run, Jump, Pulse, Time, Pause; time problems at gates earn progression/powers, bosses are action encounters without inserted math questions.
+- Math scope includes forward/backward time, addition/subtraction, crossing noon, quarter-past/to and half-past, 24-hour versus AM/PM. Gate question count is adult-configurable; earlier default two.
+- Preserve stage select, replay/progress rules, platforms/ladders/hazards, earned attack styles, weakness/progression systems and upbeat stage music. Preserve accepted single-jump behavior unless an explicit spec changes it.
+- Eight-stage expansion includes four additions recorded as Tidal Exchange/Brinejaw/Depth Charge; Verdant Engine/Floravel/Bramble Roller; Prism Archive/Facet/Prism Orbit; Dynamo Fair/Jolt Jester/Arc Thread. Match final names/balance to source and expansion document; do not assert proposal content is live.
+- v0.8 answer modes: Teach, Guide, Independent, Mastery. Exact hint, reveal, scoring and progression semantics must come from the full answer-mode specification; names alone are insufficient.
+- Adult-only six-digit PIN protects settings/DEV access; preserve local progress migration from v0.7. Local PIN is not a server security boundary.
+- Keep crisp readable text atop retro art. GitHub Pages release must match actual built assets, source path, cache/service-worker state and repository subpath.
 
-**Primary audience / operator:** Child/student player on iPad, iPhone where supported, or computer; adult/teacher/parent for protected settings and developer controls.
+## 2. This task and boundaries
 
-## 2. Standards selection
+This revision repairs documentation only. It does not implement features, run application tests, upload source, deploy a site, or alter a repository. Retain the exact current source before implementation. Historical reported functionality is a preservation checklist to reconcile against that source, not permission to recreate the program from prose.
 
-**Universal baseline:** U-01 through U-08 where applicable.
+## 3. Standards and adoption
 
-**Conditional modules:** S-02 Curriculum/Assessment/Evidence; S-03 Live Classroom and Educational Games; S-04 Distribution/Deployment
+[Canonical handbook](https://github.com/williammcada/mcada-project-handbook). File blob revisions consulted: AI-START-HERE.md 6557a45aaa6d29d7d1abde808e6d0ac248b08820; UNIVERSAL-RULES.md aed6fe311aa2e88983f862a30a2d8f05d2ffc04d; CONDITIONAL-STANDARDS.md dad2d3a05ca0f18260196ea51ac6351bffffdc1c; PROJECT-TEMPLATE.md 574f4c6fcf19ecc2f9e27582fd856fb08123e8da. These are file blobs, not repository commit SHAs.
 
-Apply only the selected modules and project-local requirements. Do not import restrictions from unrelated projects.
+Relevant rules: U-01 identity, U-02 help, U-03 input validation, U-04 unambiguous math/text where applicable, U-05 reader/device, U-06 preservation, U-07 verification, U-08 local scope. Conditional selection: S-02, S-03, S-04.
+Baseline adoption: selected for this documentation task within existing user instructions. Handbook still labels shared scope/modules seeded/draft; no new global rule ratification is inferred. Project-specific approved decisions control their own scope.
 
-## 3. Project-specific requirements
+## 4. Must-retain behavior
 
-- Preserve time-arithmetic learning identity and the configured gate/question modes.
-- Support complete required touch controls on target mobile devices and keyboard controls where supported.
-- Keep important in-game text crisp and readable.
-- Preserve adult settings/DEV boundaries and local-only progress behavior unless explicitly changed.
-- GitHub Pages deployment must publish the actual intended version rather than a stale build.
-- Math prompts must avoid unstated rounding or time-convention ambiguity.
+The detailed scope above is the feature-preservation inventory. Preserve existing settings, data, accepted content, assets, exports and compatibility confirmed in source. Distinguish implemented behavior, accepted pending changes and historical requests during intake. A missing entry in this brief is not authorization to remove working behavior. Preserve valid user work during migrations and failures.
 
-## 4. Preserve from the current accepted project
+## 5. Source, release and deployment discipline
 
-- Eight-stage structure and stage-select/progression behavior currently accepted.
-- Teach, Guide, Independent, and Mastery answer modes.
-- Boss/gameplay balance decisions, earned attack styles, and power progression unless a later spec changes them.
-- Local progress storage and report behavior.
-- Retro visual/music identity and touch-first interface.
+Historical repository candidate 54a5d5171ed652731ced87fab83e1ae8dca1634c labels v0.8.0. User observed hosted v0.7 appearance and missing options. Current deployed version is UNVERIFIED, not asserted v0.8.
 
-## 5. Relationship to other projects
+Record exact selected source filename/hash and repository commit when importing it; record live URL/version only after actually opening it. Unknown commit does not mean the product is unbuilt.
 
-- Independent educational game; MathQuest rules do not automatically apply.
-- Shares universal educational-game principles but retains its own time-arithmetic, boss, control, and presentation rules.
+DESIGN → CHANGE SPEC → IMPLEMENT → CHECKPOINT → VERIFY → VERIFIED CHECKPOINT → RELEASE → DEPLOY.
 
-A conceptual relationship is not proof of an implemented integration. Do not invent a shared API, data schema, identity layer, or deployment dependency without an explicit integration task.
+Use “implementation checkpoint” or “release candidate” before verification. Preserve candidate bytes and logs before packaging; recover that checkpoint after a ZIP/upload failure. Do not rebuild a verified implementation to fix delivery. Repository upload and website deployment are different operations; existing automatic deployments may run when main changes.
 
-## 6. Source and version discipline
+## 6. Known issues, conflicts and open evidence
 
-The exact current source artifact or repository commit must be identified before a substantive build. If the field above says the source is not yet established, first locate the latest known-good local file/ZIP or existing repository state and record its exact identity here.
+Observed stale v0.7 deployment/missing options, prior YAML workflow error, text and iPhone zoom issues. Historical reported 338 checks do not prove current hosted behavior or physical Safari compatibility.
 
-For substantial revisions use:
+| Conflict or risk | Required handling |
+| --- | --- |
+| Historical claim versus current source | Inspect exact source; keep historical claim labeled until verified. |
+| Proposed next scope versus working baseline | Use the approved version-specific specification; do not silently promote proposals. |
+| Other project rules | Do not import AAC quotas, other-game retry counts, or a shared backend without explicit scope. |
+| Handbook proposals | No additional exception or proposal is adopted by this brief. |
 
-**DESIGN → CHANGE SPEC → IMPLEMENT → CHECKPOINT → VERIFY → VERIFIED CHECKPOINT → RELEASE → DEPLOY (when applicable)**
+## 7. Verification contract
 
-A packaging/export/deployment failure must not force reconstruction of an already verified build.
+Check all four mode semantics and PIN boundary, saved-progress migration, time boundary answers, stage/boss completion, controls and actual hosted version/options on iPad.
 
-## 7. Definition of done
+| Evidence required | Result in this task |
+| --- | --- |
+| Exact source candidate/commit identified and preserved | Not run — documentation revision only |
+| Project-specific checks above, with inputs and expected/actual results | Not run |
+| Save/import/export and malformed-input regression | Not run |
+| Intended devices and real deployment path, where applicable | Not run |
+| Version, release notes and delivered bytes agree | Not run |
 
-| # | Requirement / check | Result | Evidence / limitation |
-| ---: | --- | --- | --- |
-| 1 | Math gates score supported time-arithmetic representations correctly. | Not run | |
-| 2 | Touch controls work on target iPad/iPhone sizes claimed by the release. | Not run | |
-| 3 | Keyboard controls work where claimed. | Not run | |
-| 4 | Bosses and stages remain completable under the intended difficulty. | Not run | |
-| 5 | Text is crisp on actual target displays. | Not run | |
-| 6 | Progress/save/replay/DEV boundaries work as documented. | Not run | |
-| 7 | GitHub Actions or Pages deployment serves the intended version. | Not run | |
+The next build report must name the candidate, environment and test results; historical reports of passing tests do not transfer to a changed candidate.
 
-Allowed results: **Passed / Failed / Not run / Not applicable**. A "Passed" result requires an actual check against the identified candidate.
+## 8. Handoff and provenance
 
-## 8. Known issues and migration notes
+Required project records: CHRONO_CIRCUIT_EIGHT_STAGE_EXPANSION_PROPOSAL.docx; v0.8 Answer Modes Specification; current source, build output and deployment configuration.
 
-Preserve the existing detailed README content when replacing it with the migration-enhanced README in this pack. The new README below includes the current release information plus the canonical documentation links.
+Provenance: previous migration brief and project-history audit in this conversation; directly read dossier/proposal where explicitly stated above. Records not explicitly marked read here are retrieval targets, not claims of fresh inspection. No current app code was tested for this brief.
 
-## 9. Handoff files
+Before substantive implementation retrieve these records, the current source, approved change spec and applicable handbook. If an indispensable spec is inaccessible, report the gap instead of filling it with invented details. Do not delete unique historical chats/assets until their contents are independently preserved.
 
-A substantive AI implementation task should retrieve or receive:
+## 9. Ecosystem boundary
 
-1. `AI-START-HERE.md`;
-2. `UNIVERSAL-RULES.md`;
-3. the relevant sections of `CONDITIONAL-STANDARDS.md`;
-4. this project brief;
-5. the exact current source artifact/commit;
-6. the approved version-specific change specification;
-7. applicable assets and deployment configuration.
+Shared principles do not establish shared code, accounts or interfaces. MathQuest is engagement, TestForge assessment design, GradePal learner-level evidence, and DataDiver institutional analytics. Integration remains separately specified unless confirmed in source. Other projects remain independent unless their brief explicitly says otherwise.
 
-Do not reconstruct the current implementation from a historical chat summary when the actual source should be available.
-
-## 10. Ownership
-
-**William McAda**  
-**A WILLIAM MCADA PRODUCT**

@@ -7,10 +7,14 @@ CHRONO CIRCUIT is a touch-first action-platform game for practicing time arithme
 ## Canonical project record
 
 **Repository:** `williammcada/CHRONO-CIRCUIT`  
-**Current state:** Existing deployed v0.8 codebase. The repository reports 338 automated checks passed for the release; physical Safari remained unverified in that release note.  
+**Current state:** Preserved v0.8.0 source; current live deployment remains unverified. Historical release notes report 338 automated checks; these are not new verification results.  
 **Handbook:** `williammcada/mcada-project-handbook`
 
 The repository is the canonical home for the current source, permanent project brief, and approved version-specific change specifications. Chat history is working context rather than the permanent project record.
+
+## Approved next revision
+
+[v0.9 Modular Math](docs/change-specs/v0.9-MODULAR-MATH.md) is approved; implementation and verification remain pending. This documentation checkpoint does not update the playable game.
 
 ## Documentation
 

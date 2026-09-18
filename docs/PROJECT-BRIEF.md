@@ -1,6 +1,6 @@
 # Project Brief — CHRONO CIRCUIT
 
-**Brief version:** 0.3 — source-baseline normalization  
+**Brief version:** 0.4 — approved modular-math scope  
 **Owner:** William McAda · **Credit:** A WILLIAM MCADA PRODUCT  
 **Status:** Canonical source identity reconciled; release, functional and deployment verification remain separately stated.  
 **Repository:** `williammcada/CHRONO-CIRCUIT`, branch `main`.  
@@ -20,6 +20,10 @@
 - Keep crisp readable text atop retro art. GitHub Pages release must match actual built assets, source path, cache/service-worker state and repository subpath.
 
 ## 2. This task and boundaries
+
+**Approved next revision (2026-09-18):** [v0.9 Modular Math](change-specs/v0.9-MODULAR-MATH.md). Implementation pending. Adult-selectable Time and/or Subtraction; four missing-minuend/subtrahend equation and word-problem types; whole-number entered answers; no MCQ including existing Time choices; balanced random allocation across eight stages; subject-aware descriptions, hints, Practice Relay, reports and save migration. Default subtraction range: within 100, zero off; selectable ranges 20/100/1,000. Changes apply to new runs; continued runs retain their configuration. Preserve gameplay, powers, clocks and four instructional modes. The approved specification defines acceptance tests and deliberate exceptions to the earlier time-only scope.
+
+The following paragraph records the earlier normalization task:
 
 This normalization establishes the exact repository source path, Git object identity and source-preservation checkpoint; creates the linked migration baseline; and retires stale pre-upload source-status wording. It does not change application behavior, approve new features, rerun product tests or convert source preservation into a release claim.
 

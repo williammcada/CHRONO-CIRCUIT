@@ -25,3 +25,7 @@ For a pre-versioned project, use a descriptive draft name only until a version i
 9. Record the result in the project brief.
 
 Historical chats are useful working context, but they are not the canonical specification once an approved change file exists.
+
+## Current approved work
+
+[v0.9 Modular Math](v0.9-MODULAR-MATH.md): approved 2026-09-18; implementation and verification pending.

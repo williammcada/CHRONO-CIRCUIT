@@ -1,12 +1,12 @@
 # Project Brief — CHRONO CIRCUIT
 
-**Brief version:** 0.2 — audited documentation revision  
+**Brief version:** 0.3 — source-baseline normalization  
 **Owner:** William McAda · **Credit:** A WILLIAM MCADA PRODUCT  
-**Status:** Revised record for owner review; not an application release or fresh feature approval.  
-**Repository destination:** williammcada/CHRONO-CIRCUIT (verify existence/current branch before source edits).  
-**Current running version:** Not independently verified in this documentation task.  
-**Source/baseline:** Historical repository candidate 54a5d5171ed652731ced87fab83e1ae8dca1634c labels v0.8.0. User observed hosted v0.7 appearance and missing options. Current deployed version is UNVERIFIED, not asserted v0.8.  
-**Next work:** Reconcile v0.8 source/build/deployment, preserving accepted game features.
+**Status:** Canonical source identity reconciled; release, functional and deployment verification remain separately stated.  
+**Repository:** `williammcada/CHRONO-CIRCUIT`, branch `main`.  
+**Current running version:** Unverified. The structured v0.8.0-labeled source is preserved, but earlier observation showed a v0.7-looking deployment with missing options.  
+**Source/baseline:** Canonical preserved source: the structured `public/` application tree (tree `d1d78fd3b6b6d72a43c74e26ac4b2cb38fc4002d`) with entry point `public/index.html` (blob `ee006fe52ca333724a3fcc0db9df5eb5aabfee77`) at source checkpoint `f73f1e34eef5da83ac686c3b41b99b9e55c02133`. Repository records label this v0.8.0; the live deployment remains unverified.  
+**Next work:** Verify the actual hosted version, answer modes, assets and cache/service-worker state against the preserved structured source before further gameplay revisions.  
 
 ## 1. Purpose, audience and detailed scope
 
@@ -21,7 +21,7 @@
 
 ## 2. This task and boundaries
 
-This revision repairs documentation only. It does not implement features, run application tests, upload source, deploy a site, or alter a repository. Retain the exact current source before implementation. Historical reported functionality is a preservation checklist to reconcile against that source, not permission to recreate the program from prose.
+This normalization establishes the exact repository source path, Git object identity and source-preservation checkpoint; creates the linked migration baseline; and retires stale pre-upload source-status wording. It does not change application behavior, approve new features, rerun product tests or convert source preservation into a release claim.
 
 ## 3. Standards and adoption
 
@@ -36,13 +36,13 @@ The detailed scope above is the feature-preservation inventory. Preserve existin
 
 ## 5. Source, release and deployment discipline
 
-Historical repository candidate 54a5d5171ed652731ced87fab83e1ae8dca1634c labels v0.8.0. User observed hosted v0.7 appearance and missing options. Current deployed version is UNVERIFIED, not asserted v0.8.
+Canonical preserved source: the structured `public/` application tree (tree `d1d78fd3b6b6d72a43c74e26ac4b2cb38fc4002d`) with entry point `public/index.html` (blob `ee006fe52ca333724a3fcc0db9df5eb5aabfee77`) at source checkpoint `f73f1e34eef5da83ac686c3b41b99b9e55c02133`. Repository records label this v0.8.0; the live deployment remains unverified.
 
-Record exact selected source filename/hash and repository commit when importing it; record live URL/version only after actually opening it. Unknown commit does not mean the product is unbuilt.
+See [`MIGRATION-BASELINE.md`](MIGRATION-BASELINE.md) for the authoritative source manifest and the checks actually performed.
 
 DESIGN → CHANGE SPEC → IMPLEMENT → CHECKPOINT → VERIFY → VERIFIED CHECKPOINT → RELEASE → DEPLOY.
 
-Use “implementation checkpoint” or “release candidate” before verification. Preserve candidate bytes and logs before packaging; recover that checkpoint after a ZIP/upload failure. Do not rebuild a verified implementation to fix delivery. Repository upload and website deployment are different operations; existing automatic deployments may run when main changes.
+Use “implementation checkpoint” or “release candidate” before verification. Preserve candidate bytes and logs before packaging; recover that checkpoint after a ZIP/upload failure. Do not rebuild a verified implementation to fix delivery. Repository upload and website deployment are different operations.
 
 ## 6. Known issues, conflicts and open evidence
 
@@ -61,7 +61,7 @@ Check all four mode semantics and PIN boundary, saved-progress migration, time b
 
 | Evidence required | Result in this task |
 | --- | --- |
-| Exact source candidate/commit identified and preserved | Not run — documentation revision only |
+| Exact source candidate/commit identified and preserved | Passed — canonical path and source checkpoint recorded in `docs/MIGRATION-BASELINE.md`; no functional verification inferred |
 | Project-specific checks above, with inputs and expected/actual results | Not run |
 | Save/import/export and malformed-input regression | Not run |
 | Intended devices and real deployment path, where applicable | Not run |
@@ -70,6 +70,8 @@ Check all four mode semantics and PIN boundary, saved-progress migration, time b
 The next build report must name the candidate, environment and test results; historical reports of passing tests do not transfer to a changed candidate.
 
 ## 8. Handoff and provenance
+
+Current source identity is recorded in [`MIGRATION-BASELINE.md`](MIGRATION-BASELINE.md). That manifest supersedes earlier unknown-source or pre-upload statements while preserving the original migration note as history.
 
 Required project records: CHRONO_CIRCUIT_EIGHT_STAGE_EXPANSION_PROPOSAL.docx; v0.8 Answer Modes Specification; current source, build output and deployment configuration.
 

@@ -1,20 +1,16 @@
 # Migration Note — CHRONO CIRCUIT
 
-**Prepared:** 18 September 2026
+**Prepared:** 18 September 2026  
+**Status:** Historical migration note; source-status section superseded on 18 September 2026.
 
-This file records the initial move from chat-centered project history toward a repository-centered canonical record.
+The canonical source identity is now recorded in [`MIGRATION-BASELINE.md`](MIGRATION-BASELINE.md). Earlier statements that the source, filename, version or repository checkpoint was “TO ESTABLISH” are no longer current.
 
-## Source status at migration
+## Resolved source status
 
-Existing GitHub repository. Current latest commit observed during migration: `54a5d5171ed652731ced87fab83e1ae8dca1634c`. The repository README identifies v0.8.0.
+Canonical preserved source: the structured `public/` application tree (tree `d1d78fd3b6b6d72a43c74e26ac4b2cb38fc4002d`) with entry point `public/index.html` (blob `ee006fe52ca333724a3fcc0db9df5eb5aabfee77`) at source checkpoint `f73f1e34eef5da83ac686c3b41b99b9e55c02133`. Repository records label this v0.8.0; the live deployment remains unverified.
 
-## What to do next
+## Remaining work
 
-1. Identify the exact latest known-good source artifact.
-2. Place/confirm it in this repository.
-3. Update `PROJECT-BRIEF.md` with the exact version/commit.
-4. Copy any unique approved historical specification that is still needed into `docs/change-specs/`.
-5. Verify the repository source can be opened/built/deployed as appropriate.
-6. Only after unique project state is safely preserved should historical monster chats be treated as disposable.
+Verify the actual hosted version, answer modes, assets and cache/service-worker state against the preserved structured source before further gameplay revisions.
 
-This migration note is not a release specification and does not authorize new features.
+This note is not a release specification and does not authorize new features. Functional, device and deployment verification remain separate from source preservation.

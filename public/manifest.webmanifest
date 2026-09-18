@@ -1,7 +1,7 @@
 {
   "name": "Chrono Circuit",
   "short_name": "Chrono Circuit",
-  "description": "An elapsed-time action adventure.",
+  "description": "An action adventure with adult-selected math practice.",
   "start_url": "./",
   "display": "standalone",
   "background_color": "#080d1d",

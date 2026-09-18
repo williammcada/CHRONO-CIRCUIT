@@ -23,7 +23,7 @@ test('each clock gate opens its actual question without advancing the world',asy
   Object.assign(g.state.player,{x:room.gate.x,y:room.gate.y+39-29,onGround:true});
   g.input.pressed.add('interact');g.tick();assert.equal(g.state.screen,'math',stage.id);
   const elapsed=g.state.roomTime;g.tick(90);assert.equal(g.state.roomTime,elapsed);assert.equal(g.save.solved.includes(room.gate.id),false);
-  assert.match(g.document.querySelector('#overlay').innerHTML,/CLOCK GATE/);
+  assert.match(g.document.querySelector('#overlay').innerHTML,/MATH GATE/);
  }
 });
 

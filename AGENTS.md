@@ -18,3 +18,10 @@ Use GitHub as the default source repository for this and future projects unless 
 - Tempo uses registered raster sprites with consistent feet anchors; never rescale each animation frame independently.
 - Run `npm test`, `npm run check`, and `npm run build` before a release. Browser tests supplement deterministic physics/curriculum tests.
 - Keep generated source artwork and registration metadata in version control. Do not include private progress reports, credentials, dependency directories, or build output.
+
+## Modular math (v0.9+)
+
+- Keep adult-selected subjects separate from stage gameplay. Preserve legacy Time generation for old runs.
+- New runs snapshot math configuration and seed; settings changes must not rewrite active questions.
+- All subjects use constructed responses; keep subtraction types separate in reports.
+- Update affected documentation alongside code; record exact verification and deployment limits.

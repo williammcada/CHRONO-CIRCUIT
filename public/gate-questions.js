@@ -1,4 +1,7 @@
-import {PROBLEMS} from './stage-data.js';
+import {copyPractice,shuffledBag,hashSeed} from './practice-config.js';
+import {moduleFor} from './math-modules.js';
+import {makeSubtraction} from './subtraction.js';
+import {PROBLEMS,ROOMS,stageFor} from './stage-data.js';
 import {makeExpansionProblem} from './curriculum.js';
 import {absolute,fromAbsolute,formatTime,elapsedText,timeWords} from './time-engine.js';
 
@@ -63,8 +66,9 @@ export function buildGateQuestions(gate,count=DEFAULT_GATE_QUESTIONS,run=0){
   return {...p,templateId:base.templateId||base.id,id:run<=1&&i<templates.length?base.id:`${gate.id}__${run}_${i}`};
  });
 }
-export const problemFingerprint=p=>JSON.stringify([p.context,p.schedule,p.tableNote,p.trips,p.steps,p.notation24]);
+export const problemFingerprint=p=>moduleFor(p).fingerprint?.(p)??JSON.stringify([p.context,p.schedule,p.tableNote,p.trips,p.steps,p.notation24]);
 export function buildPracticeCheck(problem,serial=1,excluded=[]){
+ if(moduleFor(problem).check)return moduleFor(problem).check(problem,serial);
  const id=problem.templateId||problem.id.split('__')[0],base=PROBLEMS.find(p=>(p.templateId||p.id)===id)||problem;
  let next;
  const seen=new Set([problemFingerprint(problem),...excluded]);
@@ -76,4 +80,18 @@ export function buildPracticeCheck(problem,serial=1,excluded=[]){
   if(!seen.has(problemFingerprint(next)))break;
  }
  return {...next,templateId:next.templateId||base.templateId||base.id,id:`${problem.id}__check_${serial}`};
+}
+
+// Allocate across the entire stage, rather than restarting a bag at each gate.
+export function buildModularGate(gate,count,run,config,seed){
+ const c=copyPractice(config),stage=stageFor(ROOMS.find(r=>r.gate?.id===gate.id)?.stage),number=gateQuestionCount(count);
+ const subjects=shuffledBag(c.subjects,stage.gates.length*number,`${seed}:subjects`);
+ const types=shuffledBag(c.subtraction.types.length?c.subtraction.types:['minuend-equation'],subjects.filter(s=>s==='subtraction').length,`${seed}:types`);
+ const offset=stage.gates.indexOf(gate.id)*number,legacy=buildGateQuestions(gate,number,run);
+ return legacy.map((p,i)=>{
+  const slot=offset+i;if(subjects[slot]==='time')return p;
+  const type=types[subjects.slice(0,slot).filter(s=>s==='subtraction').length];
+  const q=makeSubtraction(type,hashSeed(`${seed}:${stage.id}:${gate.id}:${slot}:${type}:1`),c.subtraction,`${gate.id}__${run}_${i}_subtraction_${type}_${seed}`);
+  return {...q,effect:PROBLEMS.find(p=>p.id===gate.problems[0])?.effect||'Gate circuit charged'};
+ });
 }

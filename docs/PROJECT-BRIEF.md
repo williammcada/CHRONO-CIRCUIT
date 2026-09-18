@@ -1,89 +1,49 @@
 # Project Brief — CHRONO CIRCUIT
 
-**Brief version:** 0.4 — approved modular-math scope  
+**Brief version:** 0.5 — v0.9 modular math implementation  
 **Owner:** William McAda · **Credit:** A WILLIAM MCADA PRODUCT  
-**Status:** Canonical source identity reconciled; release, functional and deployment verification remain separately stated.  
-**Repository:** `williammcada/CHRONO-CIRCUIT`, branch `main`.  
-**Current running version:** Unverified. The structured v0.8.0-labeled source is preserved, but earlier observation showed a v0.7-looking deployment with missing options.  
-**Source/baseline:** Canonical preserved source: the structured `public/` application tree (tree `d1d78fd3b6b6d72a43c74e26ac4b2cb38fc4002d`) with entry point `public/index.html` (blob `ee006fe52ca333724a3fcc0db9df5eb5aabfee77`) at source checkpoint `f73f1e34eef5da83ac686c3b41b99b9e55c02133`. Repository records label this v0.8.0; the live deployment remains unverified.  
-**Next work:** Verify the actual hosted version, answer modes, assets and cache/service-worker state against the preserved structured source before further gameplay revisions.  
+**Repository:** williammcada/CHRONO-CIRCUIT, main  
+**Application version:** 0.9.0  
+**Status:** Implementation complete; automated checks passed. Deployment and browser/device evidence are tracked separately in [verification](verification/v0.9.md).
 
-## 1. Purpose, audience and detailed scope
+## Purpose and targets
 
-- Retro action-platform time-arithmetic game for a child/student; landscape touch-first iPad, desktop keyboard, iPhone where tested. Earlier gamepad support is recorded and should be checked before removal.
-- Core controls Run, Jump, Pulse, Time, Pause; time problems at gates earn progression/powers, bosses are action encounters without inserted math questions.
-- Math scope includes forward/backward time, addition/subtraction, crossing noon, quarter-past/to and half-past, 24-hour versus AM/PM. Gate question count is adult-configurable; earlier default two.
-- Preserve stage select, replay/progress rules, platforms/ladders/hazards, earned attack styles, weakness/progression systems and upbeat stage music. Preserve accepted single-jump behavior unless an explicit spec changes it.
-- Eight-stage expansion includes four additions recorded as Tidal Exchange/Brinejaw/Depth Charge; Verdant Engine/Floravel/Bramble Roller; Prism Archive/Facet/Prism Orbit; Dynamo Fair/Jolt Jester/Arc Thread. Match final names/balance to source and expansion document; do not assert proposal content is live.
-- v0.8 answer modes: Teach, Guide, Independent, Mastery. Exact hint, reveal, scoring and progression semantics must come from the full answer-mode specification; names alone are insufficient.
-- Adult-only six-digit PIN protects settings/DEV access; preserve local progress migration from v0.7. Local PIN is not a server security boundary.
-- Keep crisp readable text atop retro art. GitHub Pages release must match actual built assets, source path, cache/service-worker state and repository subpath.
+Eight-stage retro action-platform game for a child. Adults select math content independently of level choice. Target landscape touch-first iPad and desktop keyboard; preserve gamepad support and existing responsive behavior. Do not infer physical Safari/iPhone verification from automated tests.
 
-## 2. This task and boundaries
+## Approved curriculum and settings
 
-**Approved next revision (2026-09-18):** [v0.9 Modular Math](change-specs/v0.9-MODULAR-MATH.md). Implementation pending. Adult-selectable Time and/or Subtraction; four missing-minuend/subtrahend equation and word-problem types; whole-number entered answers; no MCQ including existing Time choices; balanced random allocation across eight stages; subject-aware descriptions, hints, Practice Relay, reports and save migration. Default subtraction range: within 100, zero off; selectable ranges 20/100/1,000. Changes apply to new runs; continued runs retain their configuration. Preserve gameplay, powers, clocks and four instructional modes. The approved specification defines acceptance tests and deliberate exceptions to the earlier time-only scope.
+[v0.9 Modular Math](change-specs/v0.9-MODULAR-MATH.md) governs the current implementation. Protected adult settings select Time, Subtraction, or both. Subtraction contains four independent types: missing minuend equation, missing subtrahend equation, missing minuend word problem and missing subtrahend word problem. All numbers and answers are whole numbers. Ranges 20/100/1,000; default 100; zero off. All four types initially enabled. Existing saves and fresh defaults stay Time-only until changed by an adult.
 
-The following paragraph records the earlier normalization task:
+No multiple-choice responses, including Time. Route identifiers are entered as text; time units, AM/PM and day remain representation controls. Questions are shuffled in balanced subject/type bags across each stage. Question count defaults to two per gate, adjustable 1–10. Each stage has three gates. Configuration and seeds are fixed for a run; later settings affect new runs/relays only. Continue and new-run configurations are visibly distinguished.
 
-This normalization establishes the exact repository source path, Git object identity and source-preservation checkpoint; creates the linked migration baseline; and retires stale pre-upload source-status wording. It does not change application behavior, approve new features, rerun product tests or convert source preservation into a release claim.
+Preserve existing Time strands: forward/backward arithmetic, noon/midnight, quarter/half-hour language, 12/24-hour conversion, schedules/transfers, multi-step journeys/deadlines, comparisons and time units. Hide time-learning claims when Time is not active; keep game-world clock theming.
 
-## 3. Standards and adoption
+## Must retain
 
-[Canonical handbook](https://github.com/williammcada/mcada-project-handbook). File blob revisions consulted: AI-START-HERE.md 6557a45aaa6d29d7d1abde808e6d0ac248b08820; UNIVERSAL-RULES.md aed6fe311aa2e88983f862a30a2d8f05d2ffc04d; CONDITIONAL-STANDARDS.md dad2d3a05ca0f18260196ea51ac6351bffffdc1c; PROJECT-TEMPLATE.md 574f4c6fcf19ecc2f9e27582fd856fb08123e8da. These are file blobs, not repository commit SHAs.
+- Eight stages, stage select, replay/progress rules, single jump, ladders/platforms/hazards, art, music, gamepad, touch and keyboard controls.
+- Math only at safe gates and Practice Relay. Boss fights never open questions. All required traversal and bosses work with the basic blaster.
+- Fresh stage replays reopen gates; death/checkpoint retry retains credited and partial work. Permanent powers and learning history remain.
+- Teach, Guide, Independent and Mastery, including stage overrides. A revealed answer never credits an item; fresh checks retain the question type and range. Mastery requires two consecutive correct items.
+- Existing local adult password protection and DEV isolation. The early six-digit PIN proposal was superseded by the v0.8 release notes; v0.9 preserves the configurable password behavior.
+- Local storage key `chrono-circuit-save-v1`; schema 6 migrates versions 1–5 and retains legacy room indices. New routes store subject/type/range snapshot, seed and generator version. Old runs retain legacy Time generation.
+- Reports separate the four subtraction types, retain prior records, and distinguish support-weighted practice score from accuracy. Imports retain current adult settings and valid run snapshots; invalid learning sessions cannot inject canonical answers.
 
-Relevant rules: U-01 identity, U-02 help, U-03 input validation, U-04 unambiguous math/text where applicable, U-05 reader/device, U-06 preservation, U-07 verification, U-08 local scope. Conditional selection: S-02, S-03, S-04.
-Baseline adoption: selected for this documentation task within existing user instructions. Handbook still labels shared scope/modules seeded/draft; no new global rule ratification is inferred. Project-specific approved decisions control their own scope.
+## Architecture and delivery
 
-## 4. Must-retain behavior
+Dependency-free ES modules in `public/`, entry point `public/index.html`. Registry: `math-modules.js`; subtraction: `subtraction.js`; configuration: `practice-config.js`; adult markup: `practice-ui.js`; legacy Time task adapter: `time-tasks.js`. Shared gate/progress layers dispatch by module. No new server, account, paid service or network dependency.
 
-The detailed scope above is the feature-preservation inventory. Preserve existing settings, data, accepted content, assets, exports and compatibility confirmed in source. Distinguish implemented behavior, accepted pending changes and historical requests during intake. A missing entry in this brief is not authorization to remove working behavior. Preserve valid user work during migrations and failures.
+GitHub Pages uses the existing main-push workflow. Build copies source/assets and creates a content-fingerprinted, scope-aware service worker. Old clients activate the update after old tabs close. Keep all asset/module paths relative to the repository subpath. Never commit build output or credentials.
 
-## 5. Source, release and deployment discipline
+## Provenance and applicable standards
 
-Canonical preserved source: the structured `public/` application tree (tree `d1d78fd3b6b6d72a43c74e26ac4b2cb38fc4002d`) with entry point `public/index.html` (blob `ee006fe52ca333724a3fcc0db9df5eb5aabfee77`) at source checkpoint `f73f1e34eef5da83ac686c3b41b99b9e55c02133`. Repository records label this v0.8.0; the live deployment remains unverified.
+Implementation starts from `979485dd02a312e86b02c780cc6737fb1e8ee40b` (approved design checkpoint). Earlier source preservation is recorded in [MIGRATION-BASELINE.md](MIGRATION-BASELINE.md). v0.8-labeled source still contained BUILD 0.7.0; v0.9 corrects the running identity.
 
-See [`MIGRATION-BASELINE.md`](MIGRATION-BASELINE.md) for the authoritative source manifest and the checks actually performed.
+Handbook revision consulted: `6de4cbf33c3b9860125c412359fb64ef3d0b20d1`; AI-START-HERE.md, UNIVERSAL-RULES.md, CONDITIONAL-STANDARDS.md (S-02, S-03, S-04), RELEASE-CHECKLIST.md. Apply U-01–U-08 in project scope. No new global policy or other-project quotas are adopted.
+
+Also consulted AGENTS.md, v0.8 answer-mode Markdown and original DOCX, v0.8 release-note clarifications, relevant eight-stage expansion sections, and current source/workflow. v0.9 deliberately supersedes time-only curriculum and answer-choice allowances; it does not change stage/boss design.
+
+## Verification and release workflow
 
 DESIGN → CHANGE SPEC → IMPLEMENT → CHECKPOINT → VERIFY → VERIFIED CHECKPOINT → RELEASE → DEPLOY.
 
-Use “implementation checkpoint” or “release candidate” before verification. Preserve candidate bytes and logs before packaging; recover that checkpoint after a ZIP/upload failure. Do not rebuild a verified implementation to fix delivery. Repository upload and website deployment are different operations.
-
-## 6. Known issues, conflicts and open evidence
-
-Observed stale v0.7 deployment/missing options, prior YAML workflow error, text and iPhone zoom issues. Historical reported 338 checks do not prove current hosted behavior or physical Safari compatibility.
-
-| Conflict or risk | Required handling |
-| --- | --- |
-| Historical claim versus current source | Inspect exact source; keep historical claim labeled until verified. |
-| Proposed next scope versus working baseline | Use the approved version-specific specification; do not silently promote proposals. |
-| Other project rules | Do not import AAC quotas, other-game retry counts, or a shared backend without explicit scope. |
-| Handbook proposals | No additional exception or proposal is adopted by this brief. |
-
-## 7. Verification contract
-
-Check all four mode semantics and PIN boundary, saved-progress migration, time boundary answers, stage/boss completion, controls and actual hosted version/options on iPad.
-
-| Evidence required | Result in this task |
-| --- | --- |
-| Exact source candidate/commit identified and preserved | Passed — canonical path and source checkpoint recorded in `docs/MIGRATION-BASELINE.md`; no functional verification inferred |
-| Project-specific checks above, with inputs and expected/actual results | Not run |
-| Save/import/export and malformed-input regression | Not run |
-| Intended devices and real deployment path, where applicable | Not run |
-| Version, release notes and delivered bytes agree | Not run |
-
-The next build report must name the candidate, environment and test results; historical reports of passing tests do not transfer to a changed candidate.
-
-## 8. Handoff and provenance
-
-Current source identity is recorded in [`MIGRATION-BASELINE.md`](MIGRATION-BASELINE.md). That manifest supersedes earlier unknown-source or pre-upload statements while preserving the original migration note as history.
-
-Required project records: CHRONO_CIRCUIT_EIGHT_STAGE_EXPANSION_PROPOSAL.docx; v0.8 Answer Modes Specification; current source, build output and deployment configuration.
-
-Provenance: previous migration brief and project-history audit in this conversation; directly read dossier/proposal where explicitly stated above. Records not explicitly marked read here are retrieval targets, not claims of fresh inspection. No current app code was tested for this brief.
-
-Before substantive implementation retrieve these records, the current source, approved change spec and applicable handbook. If an indispensable spec is inaccessible, report the gap instead of filling it with invented details. Do not delete unique historical chats/assets until their contents are independently preserved.
-
-## 9. Ecosystem boundary
-
-Shared principles do not establish shared code, accounts or interfaces. MathQuest is engagement, TestForge assessment design, GradePal learner-level evidence, and DataDiver institutional analytics. Integration remains separately specified unless confirmed in source. Other projects remain independent unless their brief explicitly says otherwise.
-
+Required automated commands: `npm test`, `npm run check`, `npm run build`. Verify generator arithmetic, modes and fresh checks, all type subsets/counts, migration/import, every stage's gate/boss admission, controls and retained gameplay. Browser checks supplement these; physical iPad Safari is separate evidence. See [v0.9 verification](verification/v0.9.md) for actual outcomes and limitations. Preserve exact candidates before testing/packaging; recover them after delivery failure. Update this brief, relevant specifications/indexes, README and release notes automatically when project changes affect them.

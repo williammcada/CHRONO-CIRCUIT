@@ -1,3 +1,15 @@
+# v0.9.0 — Modular Math
+
+- Adult-selectable Time, Subtraction, or both; four independently selectable missing-minuend/subtrahend equation and word-problem types.
+- Whole-number ranges 20/100/1,000, optional zero, default within 100 with zero off. Existing users stay on Time until an adult changes it.
+- Balanced shuffled questions across each stage; stable run seeds/configuration and fresh same-type checks. Continue retains its settings; restart applies new ones while keeping permanent rewards and records.
+- Typed responses for every subject, including previous Time choices. Subject-aware hints, worked examples, narration, stage text and five-question Practice Relay.
+- Schema-6 migration and validated roundtrips; reports separate subtraction types and clarify the support-weighted practice score.
+- Running build number corrected from the stale 0.7.0 value to 0.9.0; product credit on the title screen; offline cache version updated.
+- Gameplay, eight stages/bosses, art, powers, music, controls and the existing adult password mechanism retained.
+
+Validation: 408 automated tests, module/import checks and static build passed. See [verification](docs/verification/v0.9.md) for exact evidence and browser/device limitations. Close old game tabs and reopen to activate the new offline cache.
+
 # v0.8.0
 
 - Four adult-controlled answer modes, per-stage overrides and saved run snapshots.

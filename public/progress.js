@@ -1,25 +1,35 @@
+import {copyPractice,defaultPractice,validatePractice,newRunSeed} from './practice-config.js';
+import {makeSubtraction} from './subtraction.js';
 import {modeOf} from './answer-mode.js';
 import {BOSS_ROOM,GATE_IDS,ROOMS,STAGES,PROBLEMS,stageFor} from './stage-data.js';
-import {buildGateQuestions,gateQuestionCount,buildPracticeCheck,problemFingerprint} from './gate-questions.js';
+import {buildGateQuestions,buildModularGate,gateQuestionCount,buildPracticeCheck,problemFingerprint} from './gate-questions.js';
 import {answerCorrect,taskHint} from './math-tasks.js';
 import {makeExpansionProblem} from './curriculum.js';
 import {generateProblem} from './time-engine.js';
 export const SAVE_KEY='chrono-circuit-save-v1';
 export const MAX_ENERGY=8;
-export const DEFAULT_SETTINGS={assist:true,mute:false,musicMute:false,effectsMute:false,musicVolume:.6,effectsVolume:.7,reducedMotion:false,contrast:false,narration:false,band:'story',showHints:true,touchControls:false,questionsPerGate:2,answerMode:'guide',stageModes:{}};
-const freshRoute=s=>({room:s.start,roomId:ROOMS[s.start]?.id,checkpoint:s.start,checkpointId:ROOMS[s.start]?.id,bestRoom:s.start,bestRoomId:ROOMS[s.start]?.id,complete:false,started:false,questionsPerGate:2,answerMode:'guide',attempt:0});
+export const DEFAULT_SETTINGS={assist:true,mute:false,musicMute:false,effectsMute:false,musicVolume:.6,effectsVolume:.7,reducedMotion:false,contrast:false,narration:false,band:'story',showHints:true,touchControls:false,questionsPerGate:2,answerMode:'guide',stageModes:{},mathPractice:defaultPractice()};
+const freshRoute=s=>({room:s.start,roomId:ROOMS[s.start]?.id,checkpoint:s.start,checkpointId:ROOMS[s.start]?.id,bestRoom:s.start,bestRoomId:ROOMS[s.start]?.id,complete:false,started:false,questionsPerGate:2,answerMode:'guide',attempt:0,mathPractice:defaultPractice(),generatorVersion:0,seed:0});
 export function freshSave(settings={}){
- return {version:5,learning:{},world:{},roomId:ROOMS[0]?.id,checkpointId:ROOMS[0]?.id,room:0,checkpoint:0,solved:[],answered:[],complete:false,run:0,settings:{...DEFAULT_SETTINGS,...settings,questionsPerGate:gateQuestionCount(settings.questionsPerGate??2)},records:[],powerUnlocked:false,energy:8,cleared:[],weapons:[],equipped:'brake',stage:'foundry',bestRoom:0,routes:Object.fromEntries(STAGES.map(s=>[s.id,freshRoute(s)]))};
+ return {version:6,learning:{},world:{},roomId:ROOMS[0]?.id,checkpointId:ROOMS[0]?.id,room:0,checkpoint:0,solved:[],answered:[],complete:false,run:0,settings:{...DEFAULT_SETTINGS,...settings,mathPractice:copyPractice(settings.mathPractice),questionsPerGate:gateQuestionCount(settings.questionsPerGate??2)},records:[],powerUnlocked:false,energy:8,cleared:[],weapons:[],equipped:'brake',stage:'foundry',bestRoom:0,routes:Object.fromEntries(STAGES.map(s=>[s.id,freshRoute(s)]))};
 }
 export function questionsForGate(save,id){
  const room=ROOMS.find(r=>r.gate?.id===id);if(!room)return [];
- const route=save.routes[room.stage];return buildGateQuestions(room.gate,route.questionsPerGate,route.attempt);
+ const route=save.routes[room.stage];return route.generatorVersion===1?buildModularGate(room.gate,route.questionsPerGate,route.attempt,route.mathPractice,route.seed):buildGateQuestions(room.gate,route.questionsPerGate,route.attempt);
 }
 export function startStageRun(save,id){
- const s=stageFor(id),old=save.routes[s.id];
+ const s=stageFor(id),old=save.routes[s.id],mathPractice=copyPractice(save.settings.mathPractice);
+ const previous=s.gates.flatMap(g=>questionsForGate(save,g)),count=gateQuestionCount(save.settings.questionsPerGate);
+ let seed=newRunSeed();
+ // A fresh run must not immediately repeat the same subtraction item in a slot.
+ for(let retry=0;retry<128;retry++){
+  const generated=s.gates.flatMap(id=>buildModularGate(ROOMS.find(r=>r.gate?.id===id).gate,count,old.attempt+1,mathPractice,seed));
+  if(!generated.some((p,i)=>p.moduleId==='subtraction'&&previous[i]?.moduleId==='subtraction'&&problemFingerprint(p)===problemFingerprint(previous[i])))break;
+  seed=(seed+7919)>>>0;
+ }
  save.solved=save.solved.filter(g=>!s.gates.includes(g));
  save.answered=save.answered.filter(p=>!p.startsWith(s.id+'_'));
- save.routes[s.id]={...freshRoute(s),attempt:Math.min(1000000,old.attempt+1),questionsPerGate:gateQuestionCount(save.settings.questionsPerGate),answerMode:modeOf(save.settings.stageModes?.[s.id]||save.settings.answerMode)};
+ save.routes[s.id]={...freshRoute(s),mathPractice,generatorVersion:1,seed,attempt:Math.min(1000000,old.attempt+1),questionsPerGate:gateQuestionCount(save.settings.questionsPerGate),answerMode:modeOf(save.settings.stageModes?.[s.id]||save.settings.answerMode)};
  for(const key of Object.keys(save.world||{}))if(ROOMS.find(room=>room.id===key)?.stage===s.id)delete save.world[key];
  for(const key of Object.keys(save.learning||{}))if(key.startsWith(s.id+'_'))delete save.learning[key];
  save.energy=MAX_ENERGY;rememberRoom(save,s.start);
@@ -41,10 +51,12 @@ export function awardStage(save,stage){
  save.equipped=s.powerId;save.powerUnlocked=save.weapons.includes('brake');save.energy=MAX_ENERGY;
 }
 export function migrateSave(raw){
- if(!raw||![1,2,3,4,5].includes(raw.version)||!Array.isArray(raw.records)||raw.records.length>200||!raw.records.every(validRecord)||!raw.settings||!['story','backward','quarters','24hour','mixed','tidal','garden','prism','fair'].includes(raw.settings.band))return null;
+ if(!raw||![1,2,3,4,5,6].includes(raw.version)||!Array.isArray(raw.records)||raw.records.length>200||!raw.records.every(validRecord)||!raw.settings||!['story','backward','quarters','24hour','mixed','tidal','garden','prism','fair'].includes(raw.settings.band))return null;
  if(!Number.isInteger(raw.room)||raw.room<0||raw.room>(raw.version===1?6:raw.version===2?BOSS_ROOM:ROOMS.length-1)||!Array.isArray(raw.solved))return null;
  const next=freshSave();
+ if(raw.version>=6&&validatePractice(raw.settings.mathPractice))return null;
  for(const [key,value] of Object.entries(DEFAULT_SETTINGS)){const candidate=raw.settings[key];if(typeof candidate===typeof value&&(typeof value!=='number'||Number.isFinite(candidate)))next.settings[key]=key==='questionsPerGate'?gateQuestionCount(candidate):typeof value==='number'?Math.max(0,Math.min(1,candidate)):candidate;}
+ next.settings.mathPractice=copyPractice(raw.version>=6?raw.settings.mathPractice:undefined);
  next.settings.answerMode=modeOf(raw.settings.answerMode);next.settings.stageModes=Object.fromEntries(STAGES.filter(s=>['teach','guide','independent','mastery'].includes(raw.settings.stageModes?.[s.id])).map(s=>[s.id,raw.settings.stageModes[s.id]]));
  next.world={};for(const [id,value] of Object.entries(raw.world||{}))if(ROOMS.some(room=>room.id===id)&&value&&typeof value==='object')next.world[id]=JSON.parse(JSON.stringify(value));
  next.records=raw.records.slice(-160);next.run=Number.isInteger(raw.run)?Math.max(0,raw.run):0;
@@ -64,6 +76,11 @@ export function migrateSave(raw){
  // Stable IDs are authoritative for v0.7 saves; legacy numeric indices keep their frozen v0.6 meaning.
  if(raw.version>=5)for(const s of STAGES){const old=raw.routes?.[s.id],r=next.routes[s.id];if(!old)continue;for(const key of ['room','checkpoint','bestRoom']){const index=ROOMS.findIndex(room=>room.id===old[key+'Id']&&room.stage===s.id);if(index>=0)r[key]=index;}}
  for(const s of STAGES){const r=next.routes[s.id];r.roomId=ROOMS[r.room].id;r.checkpointId=ROOMS[r.checkpoint].id;r.bestRoomId=ROOMS[r.bestRoom].id;}
+ if(raw.version>=6)for(const stage of STAGES){
+  const r=raw.routes?.[stage.id];if(!r)continue;
+  if(![0,1].includes(r.generatorVersion)||validatePractice(r.mathPractice)||!Number.isInteger(r.seed)||r.seed<0||r.seed>4294967295)return null;
+  Object.assign(next.routes[stage.id],{generatorVersion:r.generatorVersion,mathPractice:copyPractice(r.mathPractice),seed:r.seed});
+ }
  const canonicalQuestions=new Map(GATE_IDS.flatMap(id=>questionsForGate(next,id).map(p=>[p.id,p])));
  const validQuestions=new Set(canonicalQuestions.keys());
  next.answered=Array.isArray(raw.answered)?[...new Set(raw.answered.filter(id=>validQuestions.has(id)))]:[];
@@ -89,6 +106,7 @@ const plainObject=value=>!!value&&typeof value==='object'&&!Array.isArray(value)
 const canonicalJSON=value=>JSON.stringify(value,(_,v)=>plainObject(v)?Object.fromEntries(Object.keys(v).sort().map(k=>[k,v[k]])):v);
 function knownPracticeProblem(original){
  if(!plainObject(original)||typeof original.id!=='string')return null;
+ if(original.moduleId==='subtraction')return makeSubtraction(original.typeId,original.seed,original.config,original.id);
  if(original.expansion&&Number.isSafeInteger(original.variantSeed)&&original.variantSeed>=0)return makeExpansionProblem(original.templateId,original.variantSeed);
  const authored=PROBLEMS.find(p=>p.id===original.id);if(authored)return authored;
  const parts=original.id.match(/^(story|backward|quarters|24hour)-(\d+)-(clock|platforms|timeline)$/);

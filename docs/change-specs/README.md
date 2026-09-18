@@ -28,4 +28,4 @@ Historical chats are useful working context, but they are not the canonical spec
 
 ## Current approved work
 
-[v0.9 Modular Math](v0.9-MODULAR-MATH.md): approved 2026-09-18; implementation and verification pending.
+[v0.9 Modular Math](v0.9-MODULAR-MATH.md): approved 2026-09-18; implemented; see [verification](../verification/v0.9.md) for test evidence and remaining device checks.

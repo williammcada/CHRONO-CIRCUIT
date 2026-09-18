@@ -3,7 +3,7 @@ import {EXTRA_ROOMS} from './stage-layouts.js';
 import {EXPANSION_ROOMS} from './expansion-layouts.js';
 import {ADDITIONAL_PROBLEMS,QUESTION_SETS} from './curriculum.js';
 
-export const BUILD='0.7.0';
+export const BUILD='0.9.0';
 export const STAGES=[
   {id:'foundry',boss:'PENDULA',name:'FURNACE RUN',district:'Gearwork Foundry',skill:'Hours + minutes · across noon',power:'BEAT BRAKE',color:'#ffc35b',portrait:'pendula',available:true,description:'Ride the shift lifts, climb the gantries, and duck falling slag. Repair three clocks to reach Pendula’s chamber.'},
   {id:'metro',boss:'RAILOX',name:'MIDNIGHT METRO',skill:'Work backward through time',power:'TRANSIT LANCE',color:'#f98972',portrait:'railox',available:false,description:'Train roofs, signal arms, and a charging locomotive guardian. Railox jumps across the arena and reverses at the walls.'},
@@ -145,7 +145,7 @@ const descriptions={
 for(const s of STAGES){
  const rooms=ROOMS.filter(r=>r.stage===s.id);
  s.available=true;s.start=rooms[0].index;s.end=rooms.at(-1).index;s.gates=rooms.filter(r=>r.gate).map(r=>r.gate.id);
- s.description=descriptions[s.id];s.district=s.district||s.name;
+ s.description=descriptions[s.id];s.gameplayDescription=descriptions[s.id].split('. ').slice(1).join('. ');s.district=s.district||s.name;
  s.powerId={foundry:'brake',metro:'lance',tower:'disc',sky:'burst',tidal:'depth',garden:'roller',prism:'orbit',fair:'arc'}[s.id];
 }
 export const stageFor=id=>STAGES.find(s=>s.id===id)||STAGES[0];

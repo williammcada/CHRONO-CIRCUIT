@@ -2,7 +2,7 @@ import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
 
 const noop=()=>{};
-const moduleNames=['time-engine','curriculum','controls','stage-data','progress','gate-questions','physics','powers','bosses','portraits','combat','actor-art','hero-art','scenery','gate-ui','world-mechanisms','projectile-system','answer-mode','adult-lock'];
+const moduleNames=['practice-config','practice-ui','subtraction','time-engine','curriculum','controls','stage-data','progress','gate-questions','physics','powers','bosses','portraits','combat','actor-art','hero-art','scenery','gate-ui','world-mechanisms','projectile-system','answer-mode','adult-lock'];
 
 // Exercise the shipped application in an isolated VM; only browser, audio, and timers
 // are replaced. Test handles are appended in memory and never shipped to players.

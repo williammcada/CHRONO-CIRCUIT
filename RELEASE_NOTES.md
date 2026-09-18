@@ -8,7 +8,7 @@
 - Running build number corrected from the stale 0.7.0 value to 0.9.0; product credit on the title screen; offline cache version updated.
 - Gameplay, eight stages/bosses, art, powers, music, controls and the existing adult password mechanism retained.
 
-Validation: 408 automated tests, module/import checks and static build passed. See [verification](docs/verification/v0.9.md) for exact evidence and browser/device limitations. Close old game tabs and reopen to activate the new offline cache.
+Validation: 408 automated tests, module/import checks and static build passed. See [verification](docs/verification/v0.9.md) for exact evidence and browser/device limitations. The cache is designed to activate after old game tabs close. Returning-client activation remains unverified in the cloud browser; see the verification record.
 
 # v0.8.0
 

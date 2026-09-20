@@ -75,7 +75,11 @@ button:focus-visible,select:focus-visible,input:focus-visible{outline:3px solid 
 body:not(.touch-mode) #touch-controls{display:none!important}
 body.touch-mode #touch-controls{opacity:1}
 .move-pad,.action-pad{align-items:center;gap:8px}
-.climb-pad{display:flex;flex-direction:column;gap:3px}
+.move-pad{display:grid;grid-template-columns:repeat(3,var(--dpad-cell,52px));grid-template-rows:repeat(3,var(--dpad-cell,52px));gap:3px;flex-shrink:0}
+.move-pad [data-action=up]{grid-area:1/2}
+.move-pad [data-action=left]{grid-area:2/1}
+.move-pad [data-action=right]{grid-area:2/3}
+.move-pad [data-action=down]{grid-area:3/2}
 .control.climb{min-width:48px;min-height:44px;width:48px;height:44px;border-width:2px;border-radius:7px;font-size:20px}
 .control.action{position:static;min-width:65px;min-height:48px;font-size:13px;margin:0 8px}
 .control.jump{width:78px;height:68px;min-height:68px}.control.fire{width:72px;height:62px;min-height:62px}
@@ -144,3 +148,7 @@ body.touch-mode #touch-controls{opacity:1}
 @media (max-width:599px){
  .boss-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.stage-detail{display:flex}.boss-card{min-height:124px}.boss-card canvas{width:56px;height:56px}
 }
+/* Equal, minimum 44px targets; override historical move/climb size rules. */
+.move-pad{gap:3px}
+.move-pad .control{width:var(--dpad-cell,52px);height:var(--dpad-cell,52px);min-width:0;min-height:0;margin:0;border-width:2px;border-radius:8px;font-size:23px}
+#touch-controls{flex-shrink:0;padding-bottom:max(8px,env(safe-area-inset-bottom));padding-top:6px}

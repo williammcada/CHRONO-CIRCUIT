@@ -7,11 +7,11 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="description" content="Chrono Circuit: an action adventure with adult-selected math practice for iPad and desktop.">
-  <title>Chrono Circuit · v0.9</title>
+  <title>Chrono Circuit · v0.9.1</title>
   <link rel="manifest" href="./manifest.webmanifest">
   <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%23080d1d'/%3E%3Ccircle cx='16' cy='16' r='11' fill='none' stroke='%237de3da' stroke-width='3'/%3E%3Cpath d='M16 8v8l6 3' fill='none' stroke='%23ffce78' stroke-width='3'/%3E%3C/svg%3E">
-  <link rel="stylesheet" href="./style.css?v=0.9.0">
-  <link rel="stylesheet" href="./gate-ui.css?v=0.9.0">
+  <link rel="stylesheet" href="./style.css?v=0.9.1">
+  <link rel="stylesheet" href="./gate-ui.css?v=0.9.1">
 </head>
 <body>
   <div id="app">
@@ -24,7 +24,8 @@
         <div class="move-pad">
           <button class="control move" data-action="left" aria-label="Move left">◀</button>
           <button class="control move" data-action="right" aria-label="Move right">▶</button>
-          <div class="climb-pad"><button class="control climb" data-action="up" aria-label="Climb up">▲</button><button class="control climb" data-action="down" aria-label="Climb down">▼</button></div>
+          <button class="control climb" data-action="up" aria-label="Climb up">▲</button>
+          <button class="control climb" data-action="down" aria-label="Climb down">▼</button>
         </div>
         <button class="control action" data-action="interact" aria-label="Use time machine">TIME</button>
         <button id="power-control" class="control action power-control" data-action="power" aria-label="Use Beat Brake">POWER</button>
@@ -40,6 +41,6 @@
       <div class="rotate-card"><div class="rotate-icon">↻</div><h1>Turn your device sideways</h1><p>Tempo needs a little room to run.</p></div>
     </section>
   </div>
-  <script type="module" src="./game.js?v=0.9.0"></script>
+  <script type="module" src="./game.js?v=0.9.1"></script>
 </body>
 </html>

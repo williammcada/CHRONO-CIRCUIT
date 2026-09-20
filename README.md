@@ -1,8 +1,10 @@
-# CHRONO CIRCUIT v0.9.0
+# CHRONO CIRCUIT v0.9.1
 
 **A WILLIAM MCADA PRODUCT**
 
 An eight-stage action-platform game with adult-selected math practice. Choose Time, Subtraction: missing numbers, or both. The same stages, bosses and powers support the selected content.
+
+v0.9.1 keeps the game frame and crisp labels in one coordinate system, recovers layout after keyboard dismissal/app return, and replaces the touch directions with a cross-shaped D-pad. Existing progress and settings are unchanged. Close all old game tabs/windows and reopen after deployment to allow the offline update. See [viewport change specification](docs/change-specs/v0.9.1-IPAD-CONTROLS.md) and [verification limits](docs/verification/v0.9.1.md).
 
 ## Choose the practice
 

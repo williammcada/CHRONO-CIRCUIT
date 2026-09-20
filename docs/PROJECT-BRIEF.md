@@ -1,10 +1,12 @@
 # Project Brief — CHRONO CIRCUIT
 
-**Brief version:** 0.5 — v0.9 modular math implementation  
+**Brief version:** 0.6 — v0.9.1 iPad controls maintenance  
 **Owner:** William McAda · **Credit:** A WILLIAM MCADA PRODUCT  
 **Repository:** williammcada/CHRONO-CIRCUIT, main  
-**Application version:** 0.9.0  
-**Status:** Implementation complete; automated checks passed. Deployment and browser/device evidence are tracked separately in [verification](verification/v0.9.md).
+**Application version:** 0.9.1  
+**Status:** Viewport/D-pad maintenance implemented from main `ba22e640af82296bf29fc8ee40f82c4a01abf237`. Evidence and remaining device checks: [v0.9.1 verification](verification/v0.9.1.md).
+
+Current maintenance contract: [v0.9.1 iPad controls](change-specs/v0.9.1-IPAD-CONTROLS.md). Game frame stays at its origin, crisp labels share canvas-local coordinates, keyboard/return events recover layout, and a dedicated rail contains a conventional cross D-pad. No save migration or curriculum change. GitHub Pages is repository-configured; the user also reports a GitHub-connected Render deployment, whose exact URL has not been supplied for verification.
 
 ## Purpose and targets
 

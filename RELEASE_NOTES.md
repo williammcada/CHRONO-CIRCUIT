@@ -1,3 +1,11 @@
+# v0.9.1 — iPad frame recovery and directional controls
+
+- Removed visual-viewport offset translation of the game frame; added recovery after keyboard dismissal, viewport changes, rotation and return to the app.
+- Sharp text now shares the game canvas's parent and local position rather than a separate fixed-position frame.
+- Conventional cross-shaped D-pad with at least 44px targets and a taller dedicated control rail. Keyboard/gamepad mappings and action buttons retained.
+- No changes to math, save schema, progress, powers, audio or stages.
+- 420 automated tests passed at implementation checkpoint; final-candidate and hosted evidence is recorded in [verification](docs/verification/v0.9.1.md). Physical iPad reproduction remains unverified.
+
 # v0.9.0 — Modular Math
 
 - Adult-selectable Time, Subtraction, or both; four independently selectable missing-minuend/subtrahend equation and word-problem types.

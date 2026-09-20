@@ -1,3 +1,4 @@
+import {viewportLayout} from './viewport-layout.js';
 import {copyPractice,practiceSummary,shuffledBag,newRunSeed,hashSeed,TYPE_LABELS} from './practice-config.js';
 import {practiceSettingsMarkup,bindPracticeSettings,readPracticeSettings} from './practice-ui.js';
 import {makeSubtraction} from './subtraction.js';
@@ -134,25 +135,45 @@ function fitCanvas(){
   const w=viewport?.width||innerWidth,h=viewport?.height||innerHeight;
   const app=document.querySelector('#app');
   app.style.width=`${w}px`;app.style.height=`${h}px`;
-  app.style.left=`${viewport?.offsetLeft||0}px`;app.style.top=`${viewport?.offsetTop||0}px`;
+  app.style.left='0px';app.style.top='0px';
   document.documentElement.style.setProperty('--app-height',`${h}px`);
   const touch=save.settings.touchControls||window.matchMedia?.('(any-pointer: coarse)').matches||false;
   document.body.classList.toggle('touch-mode',touch);
-  const rail=touch?(h<450?94:110):0;
-  const available=Math.max(100,h-rail),cw=Math.min(w,available*16/9),ch=cw*9/16,left=(w-cw)/2,top=(available-ch)/2;
+  const {rail,cw,ch,left,top,cell}=viewportLayout(w,h,touch);
+  app.style.setProperty('--dpad-cell',`${cell}px`);
   canvas.style.width=`${Math.floor(cw)}px`;canvas.style.height=`${Math.floor(ch)}px`;canvas.style.left=`${Math.floor(left)}px`;canvas.style.top=`${Math.floor(top)}px`;
   touchControls.style.width=`${w}px`;touchControls.style.height=`${rail}px`;touchControls.style.left='0px';touchControls.style.top=`${h-rail}px`;
   touchControls.style.bottom='auto';
-  if(h>w&&state.screen==='play')showPause();
+  // Keyboard height changes aren't device rotation.
+  if(innerHeight>innerWidth&&state.screen==='play')showPause();
 }
-addEventListener('resize',fitCanvas);window.visualViewport?.addEventListener('resize',fitCanvas);window.visualViewport?.addEventListener('scroll',fitCanvas);fitCanvas();
+function recoverViewport(){
+  const active=document.activeElement;
+  const editing=active?.matches?.('input,textarea,select,[contenteditable="true"]');
+  if(!editing){
+    if(window.scrollX||window.scrollY||window.visualViewport?.offsetTop||window.visualViewport?.offsetLeft)window.scrollTo?.(0,0);
+    document.documentElement.scrollTop=0;document.body.scrollTop=0;
+  }
+  fitCanvas();
+}
+function settleViewport(){
+  recoverViewport();
+  requestAnimationFrame(recoverViewport);
+  // Safari may finish dismissing its keyboard after the initiating event.
+  clearTimeout(settleViewport.timer);
+  settleViewport.timer=setTimeout(recoverViewport,350);
+}
+addEventListener('resize',settleViewport);addEventListener('orientationchange',settleViewport);addEventListener('pageshow',settleViewport);
+window.visualViewport?.addEventListener('resize',recoverViewport);window.visualViewport?.addEventListener('scroll',recoverViewport);
+document.addEventListener('focusout',settleViewport);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)settleViewport();});fitCanvas();
 // Safari can ignore the viewport zoom hint. Suppress game gestures explicitly.
 for(const type of ['gesturestart','gesturechange','gestureend'])document.addEventListener(type,e=>{if(e.cancelable)e.preventDefault();},{passive:false});
 document.querySelector('#app').addEventListener('dblclick',e=>e.preventDefault());
 document.querySelector('#app').addEventListener('touchmove',e=>{if(e.touches.length>1&&e.cancelable)e.preventDefault();},{passive:false});
 
 function showOverlay(html, wide=false){overlay.innerHTML=`<div class="panel ${wide?'wide':''}">${html}</div>`;overlay.classList.add('open');overlay.tabIndex=-1;overlay.focus({preventScroll:true});touchControls.style.display='none';pauseButton.style.display='none';clearInput();}
-function closeOverlay(){overlay.classList.remove('open');overlay.innerHTML='';touchControls.style.display='flex';pauseButton.style.display='block';document.activeElement?.blur();clearInput();}
+function closeOverlay(){document.activeElement?.blur();overlay.classList.remove('open');overlay.innerHTML='';touchControls.style.display='flex';pauseButton.style.display='block';clearInput();settleViewport();}
 function resumePlay(){state.screen='play';closeOverlay();audio.start();}
 function bind(selector,event,handler){overlay.querySelector(selector)?.addEventListener(event,handler);}
 function bindAll(selector,event,handler){overlay.querySelectorAll(selector).forEach((el)=>el.addEventListener(event,handler));}

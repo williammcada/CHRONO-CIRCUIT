@@ -1,5 +1,6 @@
 import {readFileSync} from 'node:fs';
 import vm from 'node:vm';
+import {viewportLayout} from '../public/viewport-layout.js';
 
 const noop=()=>{};
 const moduleNames=['practice-config','practice-ui','subtraction','time-engine','curriculum','controls','stage-data','progress','gate-questions','physics','powers','bosses','portraits','combat','actor-art','hero-art','scenery','gate-ui','world-mechanisms','projectile-system','answer-mode','adult-lock'];
@@ -72,7 +73,7 @@ export async function game(options={}){
  document={body,documentElement:root,querySelector:selector=>query(selector)[0]||null,querySelectorAll:selector=>query(selector),createElement:tag=>{const n=element('created-'+nodes.size);n.tagName=tag.toUpperCase();return n;},addEventListener:(name,fn)=>events.set('document:'+name,fn),activeElement:null,hidden:false};
  const audio=class{start(){} jump(){} fire(){} hit(){} good(){} wrong(){} tick(){}};
  const context=vm.createContext({...modules,console,performance,Math,Date,JSON,Promise,URL,Blob,Set,Map,
-  sharpText:()=>noop,structuredClone,Soundtrack:audio,Image:options.Image||class{addEventListener(){}},
+  viewportLayout,sharpText:()=>noop,structuredClone,Soundtrack:audio,Image:options.Image||class{addEventListener(){}},
   preloadTempoArt:async()=>{},preloadActorArt:async()=>{},preloadScenery:async()=>{},
   localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},document,
   window:{matchMedia:()=>({matches:!!options.touch}),speechSynthesis:{cancel:noop},visualViewport:undefined},

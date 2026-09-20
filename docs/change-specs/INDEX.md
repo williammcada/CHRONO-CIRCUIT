@@ -2,6 +2,7 @@
 
 | File | Status | Scope |
 | --- | --- | --- |
+| [v0.9.1-IPAD-CONTROLS.md](v0.9.1-IPAD-CONTROLS.md) | User-authorized maintenance; implemented | Viewport recovery, shared label coordinates and cross D-pad |
 | `v0.8-ANSWER-MODES.md` | Accepted release specification | Teach, Guide, Independent, and Mastery modes |
 | [`MIGRATION-BASELINE.md`](../MIGRATION-BASELINE.md) | Current source-identity record | Exact structured source identity and deployment-verification limits |
 | [v0.9-MODULAR-MATH.md](v0.9-MODULAR-MATH.md) | Implemented v0.9.0; see verification record | Modular subjects, four subtraction types, constructed responses and save/report integration |

@@ -4,7 +4,7 @@
 **Owner:** William McAda · **Credit:** A WILLIAM MCADA PRODUCT  
 **Repository:** williammcada/CHRONO-CIRCUIT, main  
 **Application version:** 0.10.0-rc.1  
-**Status:** Shared-system implementation tested locally; deployment evidence is maintained in [verification](verification/v0.10.md).
+**Status:** Shared-system implementation deployed to [GitHub Pages](https://williammcada.github.io/CHRONO-CIRCUIT/) from `0f32a4d0c3d0a819dee50d17106b0f4d433e4bf6`; running version, answer checking and deployed hashes verified. Evidence and physical-device limits are maintained in [verification](verification/v0.10.md).
 
 ## Current contract and source
 

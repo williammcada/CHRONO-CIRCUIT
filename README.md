@@ -1,25 +1,26 @@
-# CHRONO CIRCUIT v0.9.1
+# CHRONO CIRCUIT v0.10.0-rc.1
 
 **A WILLIAM MCADA PRODUCT**
 
-An eight-stage action-platform game with adult-selected math practice. Choose Time, Subtraction: missing numbers, or both. The same stages, bosses and powers support the selected content.
+An eight-stage action-platform game using the same K–7 math catalog, settings and progression system as Olivia's Magic Bracelet Quest and Mega Man Math. The stages, bosses, powers, music and safe-gate structure remain Chrono's own.
 
-v0.9.1 keeps the game frame and crisp labels in one coordinate system, recovers layout after keyboard dismissal/app return, and replaces the touch directions with a cross-shaped D-pad. Existing progress and settings are unchanged. Close all old game tabs/windows and reopen after deployment to allow the offline update. See [viewport change specification](docs/change-specs/v0.9.1-IPAD-CONTROLS.md) and [verification limits](docs/verification/v0.9.1.md).
+See the [approved synchronization specification](docs/change-specs/v0.10-SHARED-MATH.md) and [verification record](docs/verification/v0.10.md). Physical iPhone/iPad checks remain unverified. Close all old game tabs/windows and reopen after deployment to activate the offline update.
 
 ## Choose the practice
 
-Open **Settings → Adult Settings** using the existing local adult password. Under **Math practice**, choose subjects, then select subtraction question types:
+Open **Settings → Adult Settings** using your existing local adult password (fresh installations: `admin123`). Under **Math practice**:
 
-- Missing starting number — equation.
-- Missing amount taken away — equation.
-- Missing starting number — word problem.
-- Missing amount taken away — word problem.
+- Choose General Review, Targeted Review or Fixed Progression, grade range and 1–10 questions per gate.
+- Search all grades. Search results are in grade order, not a rigor ranking.
+- Check skills; the complete selected list remains visible with Remove and Clear selection.
+- Preview one question per checked skill, in order, beside Save settings. Preview never changes progress or saves the draft.
+- Save settings to apply at the next unopened gate. An unfinished gate keeps its original question count and content.
 
-All four start selected. Choose values within 20, 100 (default), or 1,000; zero is off by default. Questions use entered answers, with balanced shuffled allocation across each stage's three gates. The question count remains 1–10 per gate, default two. Time-only remains the default until an adult changes it.
+Fresh defaults are two questions and the quarter-hour start/end-time skill (forward/backward by 15–105 minutes). The shared text catalog has 240 skills, including K–2 and all retained Olivia/Mega Man skills. It is not a complete grade curriculum.
 
-Changes apply to **new stage runs and new Practice Relays**. Continue preserves a run's questions and settings. Restart from Entrance applies the current settings, clears that stage's gate work and retains permanent powers and reports. The stage screen shows both saved and new-run practice.
+Practice Relay uses five questions from the same selection without changing the configured game-gate count. Fixed Progression advances at 80% first-attempt success over 10 questions and steps back to a linked prerequisite below 50%.
 
-Teach, Guide, Independent and Mastery retain their instructional policies. All subjects use constructed responses. Clock-themed art, TIME controls and time-slowing powers remain gameplay features even with subtraction selected.
+Teach, Guide, Independent and Mastery are no longer selectable. Begun legacy gates retain their original modes and questions for recovery; archived evidence stays separate. Old subtraction settings receive an explicitly approximate shared selection, which adults should review. Completed gates, powers and stage progress are retained. JSON backup/import, individual evidence deletion, math-only clearing and confirmed reset with a local recovery backup are available. Clock-themed art and TIME controls remain gameplay features.
 
 ## Run and verify
 
@@ -37,8 +38,9 @@ GitHub Actions tests and builds pushes to `main`, then publishes `dist` to GitHu
 ## Canonical records
 
 - [Project brief](docs/PROJECT-BRIEF.md)
-- [Approved v0.9 specification](docs/change-specs/v0.9-MODULAR-MATH.md)
-- [Verification record](docs/verification/v0.9.md)
+- [Approved synchronization specification](docs/change-specs/v0.10-SHARED-MATH.md)
+- [Verification record](docs/verification/v0.10.md)
+- [Shared-source provenance](public/shared-math.provenance.json)
 - [Release notes](RELEASE_NOTES.md)
 - [Change-spec index](docs/change-specs/INDEX.md)
 - [Historical source baseline](docs/MIGRATION-BASELINE.md)

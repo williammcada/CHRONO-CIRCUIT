@@ -1,3 +1,12 @@
+# v0.10.0-rc.1 — Synchronized math practice
+
+- Same 240-skill K–7 catalog, settings component, search, sequential previews, selection summary, answer checking and progression as Olivia/Mega Man. Includes quarter-hour forward/backward start/end times.
+- Replaces Chrono's selectable Teach/Guide/Independent/Mastery and subject/range controls, as approved. They remain only for recovery of begun old gates. All eight stages, three safe gates per stage, bosses, powers, art and music retained.
+- Shared settings apply to the next unopened gate. Each pending gate retains its snapshot/draft across switches/reloads. Five-question relay uses the same selection independently of gate count.
+- Schema 7 migration retains older saves/reports. Old subtraction selection is explicitly approximate and should be reviewed. No historical evidence is silently reclassified as shared mastery.
+- JSON backup/import, shared per-skill/math clearing, archived record deletion, confirmed campaign reset and local recovery backup. Gameplay-scoped touch/native-menu protection and capture-failure safeguards.
+- 441 automated tests, source/import checks, static build and actual Chromium shared UI/gate/reset tests passed on exact candidate `45a6ea9377c134f840ed34dd03d6a16943b7e45c`. Physical iPhone/iPad verification remains Not run; see [verification](docs/verification/v0.10.md). This prepares local math synchronization, not Math Arcade accounts/teacher assignment networking.
+
 # v0.9.1 — iPad frame recovery and directional controls
 
 - Removed visual-viewport offset translation of the game frame; added recovery after keyboard dismissal, viewport changes, rotation and return to the app.

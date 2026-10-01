@@ -2,6 +2,7 @@
 
 | File | Status | Scope |
 | --- | --- | --- |
+| [v0.10-SHARED-MATH.md](v0.10-SHARED-MATH.md) | Approved; implemented v0.10.0-rc.1 | Shared K–7 catalog/settings/engine, legacy recovery, next-gate snapshots |
 | [v0.9.1-IPAD-CONTROLS.md](v0.9.1-IPAD-CONTROLS.md) | User-authorized maintenance; implemented | Viewport recovery, shared label coordinates and cross D-pad |
 | `v0.8-ANSWER-MODES.md` | Accepted release specification | Teach, Guide, Independent, and Mastery modes |
 | [`MIGRATION-BASELINE.md`](../MIGRATION-BASELINE.md) | Current source-identity record | Exact structured source identity and deployment-verification limits |

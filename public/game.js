@@ -1,4 +1,6 @@
 import {viewportLayout} from './viewport-layout.js';
+import {freshGameSave as freshSave,migrateGameSave as migrateSave,startGameStageRun as startStageRun,questionsForGameGate as questionsForGate,useSharedGate,sharedSummary,resetShared} from './arcade-math.js';
+import {arcadeSettingsMarkup,bindArcadeSettings,openArcadeUI} from './arcade-ui.js';
 import {copyPractice,practiceSummary,shuffledBag,newRunSeed,hashSeed,TYPE_LABELS} from './practice-config.js';
 import {practiceSettingsMarkup,bindPracticeSettings,readPracticeSettings} from './practice-ui.js';
 import {makeSubtraction} from './subtraction.js';
@@ -13,7 +15,7 @@ import {
 import { Controls, KEY_MAP } from './controls.js';
 import { Soundtrack } from './music.js';
 import { BUILD, STAGES, ROOMS, FOUNDRY_PROBLEMS, GATE_IDS, BOSS_ROOM, PROBLEMS, stageFor, problemFor } from './stage-data.js';
-import { SAVE_KEY, MAX_ENERGY, freshSave, validSave, migrateSave, completeGate, canEnterBoss, checkpointFor, stageSolved, rememberRoom, awardStage, startStageRun, questionsForGate } from './progress.js';
+import { SAVE_KEY, MAX_ENERGY, validSave, completeGate, canEnterBoss, checkpointFor, stageSolved, rememberRoom, awardStage } from './progress.js';
 import {gateQuestionCount} from './gate-questions.js';
 import { STEP, newPlayer, createMachinery, updateMachinery, moveActor, hazardFrame, atExit, cameraFor, overlap, clamp } from './physics.js';
 import { activateBrake, activatePower, refillEnergy, ownedPowers, cyclePower, POWERS } from './powers.js';
@@ -61,11 +63,13 @@ function loadSave() {
 }
 
 function persist() {
-  if(dev)return;
+  if(dev)return true;
   save.records = save.records.slice(-160);
-  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); storageAvailable = true; }
-  catch { storageAvailable = false; }
+  try { localStorage.setItem(SAVE_KEY, JSON.stringify(save)); storageAvailable = true; return true; }
+  catch { storageAvailable = false; return false; }
 }
+
+function replaceSavedProgress(next){const previous=save;localStorage.setItem(SAVE_KEY+'-backup',JSON.stringify(previous));save=next;if(!persist()){save=previous;throw Error('Could not save the change. Existing progress was kept.');}document.body.classList.toggle('high-contrast',save.settings.contrast);document.body.classList.toggle('reduced-motion',save.settings.reducedMotion);}
 
 let save = loadSave();
 document.body.classList.toggle('high-contrast', save.settings.contrast);
@@ -88,13 +92,19 @@ addEventListener('keydown', (event) => {
 });
 addEventListener('keyup', (event) => {input.releaseSource(`key:${event.code}`);});
 addEventListener('blur', clearInput);
+addEventListener('pagehide',clearInput);
+addEventListener('resize',clearInput);
+addEventListener('orientationchange',clearInput);
 document.addEventListener('visibilitychange',()=>{clearInput();if(document.hidden&&state.screen==='play')showPause();});
 function clearInput(){ input.clear(); document.querySelectorAll('.control.pressed').forEach((el)=>el.classList.remove('pressed')); }
 for (const button of document.querySelectorAll('.control')) {
-  button.addEventListener('pointerdown', (event) => { event.preventDefault(); button.setPointerCapture(event.pointerId); input.set(button.dataset.action,true,`pointer:${event.pointerId}`); button.classList.add('pressed'); audio.start(); });
+  button.addEventListener('pointerdown', (event) => { event.preventDefault(); try{button.setPointerCapture(event.pointerId);}catch{input.releaseSource(`pointer:${event.pointerId}`);return;} input.set(button.dataset.action,true,`pointer:${event.pointerId}`); button.classList.add('pressed'); audio.start(); });
   const release=(event)=>{if(event.cancelable)event.preventDefault();input.releaseSource(`pointer:${event.pointerId}`);button.classList.toggle('pressed',!!input.held.get(button.dataset.action));};
   button.addEventListener('pointerup',release);button.addEventListener('pointercancel',release);button.addEventListener('lostpointercapture',release);
 }
+for(const type of ['pointerup','pointercancel'])addEventListener(type,e=>{input.releaseSource(`pointer:${e.pointerId}`);document.querySelectorAll('.control.pressed').forEach(b=>b.classList.toggle('pressed',!!input.held.get(b.dataset.action)));});
+document.addEventListener('touchend',e=>{if(!e.touches.length)clearInput();},{passive:true});
+document.addEventListener('touchcancel',clearInput,{passive:true});
 pauseButton.addEventListener('click',()=>{audio.start();if(state.screen==='play')showPause();});
 function consume(action){const yes=input.pressed.has(action);input.pressed.delete(action);return yes;}
 
@@ -167,12 +177,10 @@ addEventListener('resize',settleViewport);addEventListener('orientationchange',s
 window.visualViewport?.addEventListener('resize',recoverViewport);window.visualViewport?.addEventListener('scroll',recoverViewport);
 document.addEventListener('focusout',settleViewport);
 document.addEventListener('visibilitychange',()=>{if(!document.hidden)settleViewport();});fitCanvas();
-// Safari can ignore the viewport zoom hint. Suppress game gestures explicitly.
-for(const type of ['gesturestart','gesturechange','gestureend'])document.addEventListener(type,e=>{if(e.cancelable)e.preventDefault();},{passive:false});
-document.querySelector('#app').addEventListener('dblclick',e=>e.preventDefault());
-document.querySelector('#app').addEventListener('touchmove',e=>{if(e.touches.length>1&&e.cancelable)e.preventDefault();},{passive:false});
+// Protect gameplay only; ordinary settings retain scrolling, copying and zoom.
+for(const type of ['gesturestart','gesturechange','gestureend','dblclick','contextmenu','dragstart','selectstart'])document.querySelector('#viewport').addEventListener(type,e=>{if(e.cancelable)e.preventDefault();if(type==='contextmenu'||type==='selectstart'){clearInput();if(state.screen==='play')showPause();}},{passive:false});
 
-function showOverlay(html, wide=false){overlay.innerHTML=`<div class="panel ${wide?'wide':''}">${html}</div>`;overlay.classList.add('open');overlay.tabIndex=-1;overlay.focus({preventScroll:true});touchControls.style.display='none';pauseButton.style.display='none';clearInput();}
+function showOverlay(html, wide=false){overlay.onkeydown=null;overlay.innerHTML=`<div class="panel ${wide?'wide':''}">${html}</div>`;overlay.classList.add('open');overlay.tabIndex=-1;overlay.focus({preventScroll:true});touchControls.style.display='none';pauseButton.style.display='none';clearInput();}
 function closeOverlay(){document.activeElement?.blur();overlay.classList.remove('open');overlay.innerHTML='';touchControls.style.display='flex';pauseButton.style.display='block';clearInput();settleViewport();}
 function resumePlay(){state.screen='play';closeOverlay();audio.start();}
 function bind(selector,event,handler){overlay.querySelector(selector)?.addEventListener(event,handler);}
@@ -198,7 +206,7 @@ function showStageSelect(selected=save.stage){
  function choose(id){
   state.selectedStage=id;const s=stageFor(id),route=save.routes[id];
   overlay.querySelectorAll('[data-stage]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.stage===id)));
-  overlay.querySelector('#stage-detail').innerHTML=`<p class="eyebrow">${stageSolved(save,id)} / 3 GATES RESTORED</p><h3 style="color:${s.color}">${s.name}</h3><p>${stageDescription(s,route.started&&!route.complete?route.mathPractice:save.settings.mathPractice)}</p>${(route.started&&!route.complete?route.mathPractice:save.settings.mathPractice).subjects.includes('time')?`<p class="stage-skill">Time: ${s.skill}</p>`:''}<p class="small">New run: ${practiceSummary(save.settings.mathPractice)}</p>${route.started&&!route.complete?`<p class="small">Continue: ${practiceSummary(route.mathPractice)}</p>`:''}<p class="small">Guardian reward: <strong>${s.power}</strong></p>${route.started&&!route.complete?'<button class="button ghost" id="restart-stage">RESTART FROM ENTRANCE</button>':''}<p class="small">Every fresh run requires the clock gates. Replays keep your powers and learning report.</p>`;
+  overlay.querySelector('#stage-detail').innerHTML=`<p class="eyebrow">${stageSolved(save,id)} / 3 GATES RESTORED</p><h3 style="color:${s.color}">${s.name}</h3><p>${stageDescription(s,save.sharedMath?{subjects:[]}:(route.started&&!route.complete?route.mathPractice:save.settings.mathPractice))}</p>${(!save.sharedMath&&(route.started&&!route.complete?route.mathPractice:save.settings.mathPractice).subjects.includes('time'))?`<p class="stage-skill">Time: ${s.skill}</p>`:''}<p class="small">New run: ${(save.sharedMath?sharedSummary(save):practiceSummary(save.settings.mathPractice))}</p>${route.started&&!route.complete?`<p class="small">Continue: ${(save.sharedMath?'Begun gates retain saved work; unopened gates use current math settings.':practiceSummary(route.mathPractice))}</p>`:''}<p class="small">Guardian reward: <strong>${s.power}</strong></p>${route.started&&!route.complete?'<button class="button ghost" id="restart-stage">RESTART FROM ENTRANCE</button>':''}<p class="small">Every fresh run requires the clock gates. Replays keep your powers and learning report.</p>`;
   overlay.querySelector('#enter-stage').textContent=`${route.complete?'REPLAY':route.started?'CONTINUE':'ENTER'} ${s.name}`;
   bind('#restart-stage','click',()=>showIntro(id));
  }
@@ -210,7 +218,7 @@ function showStageSelect(selected=save.stage){
 
 function showIntro(id=state.selectedStage){
  const s=stageFor(typeof id==='string'?id:save.stage);state.screen='intro';
- showOverlay(`<div class="stage-intro"><canvas id="intro-portrait" width="64" height="64" aria-label="${s.boss}"></canvas><p class="eyebrow">${s.district}</p><h2 style="color:${s.color}">${s.name}</h2><p>${stageDescription(s,save.settings.mathPractice)}</p><p>New run: ${practiceSummary(save.settings.mathPractice)}</p>${save.routes[s.id].started&&!save.routes[s.id].complete?'<p>Restarting clears this stage’s gate work. Earned powers and learning records stay.</p>':''}<p class="objective">Restore three gates · ${save.settings.questionsPerGate} question${save.settings.questionsPerGate===1?'':'s'} per gate. Reach ${s.boss} and earn ${s.power}.</p><p class="small">Every fresh run starts with closed clock gates. Checkpoint retries keep your answers. Boss fights are pure action. Every guardian can be beaten with your regular blaster.</p><p class="keyboard-help">${KEYBOARD_HELP}</p><div class="menu"><button class="button primary" id="go">LET’S GO</button><button class="button ghost" id="back">BACK</button></div></div>`,true);
+ showOverlay(`<div class="stage-intro"><canvas id="intro-portrait" width="64" height="64" aria-label="${s.boss}"></canvas><p class="eyebrow">${s.district}</p><h2 style="color:${s.color}">${s.name}</h2><p>${stageDescription(s,save.sharedMath?{subjects:[]}:save.settings.mathPractice)}</p><p>New run: ${(save.sharedMath?sharedSummary(save):practiceSummary(save.settings.mathPractice))}</p>${save.routes[s.id].started&&!save.routes[s.id].complete?'<p>Restarting clears this stage’s gate work. Earned powers and learning records stay.</p>':''}<p class="objective">Restore three gates · ${save.settings.questionsPerGate} question${save.settings.questionsPerGate===1?'':'s'} per gate. Reach ${s.boss} and earn ${s.power}.</p><p class="small">Every fresh run starts with closed clock gates. Checkpoint retries keep your answers. Boss fights are pure action. Every guardian can be beaten with your regular blaster.</p><p class="keyboard-help">${KEYBOARD_HELP}</p><div class="menu"><button class="button primary" id="go">LET’S GO</button><button class="button ghost" id="back">BACK</button></div></div>`,true);
  drawPortrait(overlay.querySelector('#intro-portrait'),s.portrait);
  bind('#go','click',()=>beginStage(s.id));bind('#back','click',()=>showStageSelect(s.id));
 }
@@ -238,22 +246,29 @@ function masteryRows() {
   const weights={independent:1,'self-corrected':.7,scaffolded:.4,demonstrated:.1};
   const key=r=>`${r.moduleId||'time'}:${r.typeId||r.skill}`;
   const skills=[...new Set(save.records.map(key))];
-  return skills.map(id=>{const records=save.records.filter(r=>key(r)===id).slice(-10),last=records.at(-1),sub=last.moduleId==='subtraction',skill=sub?`Subtraction: ${TYPE_LABELS[last.typeId]||last.skill}`:`Time: ${last.skill}`;const independent=records.filter(r=>r.support==='independent').length;const representations=new Set(records.map(r=>r.representation)).size;const templates=new Set(records.map(r=>r.templateId||r.id)).size;const needsBoundary=!sub&&['crossing noon','mixed time','backward time','24-hour time'].includes(last.skill);const boundary=records.some(r=>r.boundary.length);const score=Math.round(records.reduce((n,r)=>n+weights[r.support],0)/records.length*100);const secure=records.length>=5&&independent/records.length>=.8&&(sub||representations>=2||templates>=2)&&(!needsBoundary||boundary);return {skill,records,independent,score,secure};});
+  return skills.map(id=>{const records=save.records.filter(r=>key(r)===id).slice(-10),last=records.at(-1),sub=last.moduleId==='subtraction',skill=last.moduleId==='shared'?`Shared math: ${last.skill}`:sub?`Subtraction: ${TYPE_LABELS[last.typeId]||last.skill}`:`Time: ${last.skill}`;const independent=records.filter(r=>r.support==='independent').length;const representations=new Set(records.map(r=>r.representation)).size;const templates=new Set(records.map(r=>r.templateId||r.id)).size;const needsBoundary=!sub&&['crossing noon','mixed time','backward time','24-hour time'].includes(last.skill);const boundary=records.some(r=>r.boundary.length);const score=Math.round(records.reduce((n,r)=>n+weights[r.support],0)/records.length*100);const secure=last.moduleId!=='shared'&&records.length>=5&&independent/records.length>=.8&&(sub||representations>=2||templates>=2)&&(!needsBoundary||boundary);return {skill,records,independent,score,secure};});
 }
 
 function escapeHTML(value){return String(value).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 
 function showReport(back) {
   state.screen='report';const rows=masteryRows();const total=save.records.length;const independent=save.records.filter((r)=>r.support==='independent').length;const common=Object.create(null);for(const r of save.records)for(const e of r.errors||[])common[e]=(common[e]||0)+1;const next=Object.entries(common).sort((a,b)=>b[1]-a[1])[0]?.[0]?.replaceAll('-',' ')||'No misconception pattern yet';
-  showOverlay(`<p class="eyebrow">LOCAL LEARNING RECORD</p><h2>GROWN-UP REPORT</h2><p>${total} completed challenges · ${independent} independent</p><table class="report"><thead><tr><th>Skill</th><th>Recent</th><th>Independent</th><th>Practice score</th></tr></thead><tbody>${rows.length?rows.map((r)=>`<tr><td>${escapeHTML(r.skill)}${r.secure?' <span class="tag secure">secure</span>':''}</td><td>${r.records.length}</td><td>${r.independent}</td><td>${r.score}%</td></tr>`).join(''):'<tr><td colspan="4">Play a challenge to begin the report.</td></tr>'}</tbody></table><p class="small">Practice score reflects the amount of support used, not percent correct.</p><p class="small">Answer modes: ${MODES.map(m=>`${m}: ${save.records.filter(r=>r.answerMode===m).length}`).join(" · ")}. Earlier records without a mode are retained.</p><p><strong>Most useful next focus:</strong> ${escapeHTML(next)}</p><p class="small">Records stay on this device. No name, account, or analytics are used.</p><div class="menu"><button class="button" id="export">EXPORT JSON</button><label class="button ghost" for="import">IMPORT JSON</label><input class="sr-only" id="import" type="file" accept="application/json"><button class="button primary" id="done">DONE</button></div><div id="import-status" class="feedback" hidden></div>`,true);
+  showOverlay(`<p class="eyebrow">LOCAL LEARNING RECORD</p><h2>GROWN-UP REPORT</h2><p>${total} completed challenges · ${independent} independent</p><table class="report"><thead><tr><th>Skill</th><th>Recent</th><th>Independent</th><th>Practice score</th></tr></thead><tbody>${rows.length?rows.map((r)=>`<tr><td>${escapeHTML(r.skill)}${r.secure?' <span class="tag secure">secure</span>':''}</td><td>${r.records.length}</td><td>${r.independent}</td><td>${r.score}%</td></tr>`).join(''):'<tr><td colspan="4">Play a challenge to begin the report.</td></tr>'}</tbody></table><p class="small">Practice score reflects the amount of support used, not percent correct.</p><p class="small">Shared-system completions: ${save.records.filter(r=>r.moduleId==='shared').length}. Earlier answer modes: ${MODES.map(m=>`${m}: ${save.records.filter(r=>r.answerMode===m).length}`).join(" · ")}. Earlier records without a mode are retained.</p><p><strong>Most useful next focus:</strong> ${escapeHTML(next)}</p><p class="small">Records stay on this device. No name, account, or analytics are used.</p><div class="menu"><button class="button" id="export">EXPORT JSON</button><label class="button ghost" for="import">IMPORT JSON</label><input class="sr-only" id="import" type="file" accept="application/json"><button class="button primary" id="done">DONE</button></div><div id="import-status" class="feedback" hidden></div>`,true);
   bind('#done','click',back);bind('#export','click',exportSave);bind('#import','change',(event)=>importSave(event,()=>showReport(back)));
+ if(save.sharedMath){
+  const archived=save.records.map((r,index)=>({r,index})).filter(({r})=>r.moduleId!=='shared');
+  overlay.querySelector('.panel').insertAdjacentHTML('beforeend',`<details><summary>Archived learning records (${archived.length})</summary><p>Deletion removes the report record, not earned powers or credited gate work. One local backup is kept; restore it from Adult Settings.</p>${archived.map(({r,index})=>`<p>${escapeHTML(r.skill)} · ${r.attempts} attempts <button class="button" data-delete-record="${index}">Delete record</button></p>`).join('')}<button class="button" id="delete-archive" ${archived.length?'':'disabled'}>Clear archived reports</button><p id="archive-status" role="status"></p></details>`);
+  const remove=indices=>{if(!adult.unlocked)return adultLogin(back,()=>showReport(back));if(!confirm(`Delete ${indices.length} archived report records? Game progress, current gates and shared-system evidence stay. One local backup will be retained.`))return;try{const next=structuredClone(save);next.records=next.records.filter((_,i)=>!indices.includes(i));replaceSavedProgress(next);showReport(back);}catch(e){overlay.querySelector('#archive-status').textContent=e.message;}};
+  bindAll('[data-delete-record]','click',e=>remove([Number(e.currentTarget.dataset.deleteRecord)]));bind('#delete-archive','click',()=>remove(archived.map(x=>x.index)));
+ }
 }
 
 function exportSave(){const blob=new Blob([JSON.stringify(save,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='chrono-circuit-progress.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),500);}
-async function importSave(event,done){if(!adult.unlocked){adultLogin(showTitle);return;}const status=overlay.querySelector('#import-status');status.hidden=false;try{const file=event.target.files[0];if(!file||file.size>1024*1024)throw Error('Choose a progress JSON file smaller than 1 MB.');const parsed=migrateSave(JSON.parse(await file.text()));if(!parsed)throw Error('That file is not a valid Chrono Circuit report.');parsed.settings.answerMode=save.settings.answerMode;parsed.settings.stageModes=save.settings.stageModes;parsed.settings.questionsPerGate=save.settings.questionsPerGate;parsed.settings.mathPractice=copyPractice(save.settings.mathPractice);save=parsed;document.body.classList.toggle('high-contrast',save.settings.contrast);document.body.classList.toggle('reduced-motion',save.settings.reducedMotion);persist();fitCanvas();status.textContent='Progress restored.';setTimeout(done,500);}catch(error){status.textContent=error.message||'Could not import that file.';status.classList.add('hint');}}
+async function importSave(event,done){if(!adult.unlocked){adultLogin(showTitle);return;}const status=overlay.querySelector('#import-status');status.hidden=false;try{const file=event.target.files[0];if(!file||file.size>8*1024*1024)throw Error('Choose a progress JSON file smaller than 8 MB.');const parsed=migrateSave(JSON.parse(await file.text()));if(!parsed)throw Error('That file is not a valid Chrono Circuit report.');parsed.settings.answerMode=save.settings.answerMode;parsed.settings.stageModes=save.settings.stageModes;parsed.settings.questionsPerGate=save.settings.questionsPerGate;parsed.settings.mathPractice=copyPractice(save.settings.mathPractice);if(save.sharedMath&&parsed.sharedMath)parsed.sharedMath.config=structuredClone(save.sharedMath.config);replaceSavedProgress(parsed);fitCanvas();status.textContent='Progress restored.';setTimeout(done,500);}catch(error){status.textContent=error.message||'Could not import that file.';status.classList.add('hint');}}
 
 const TIME_BANDS={story:'WHOLE HOURS & MIXED TIME',quarters:'QUARTER PAST / HALF PAST / QUARTER TO',backward:'GOING BACKWARD', '24hour':'24-HOUR CLOCK',tidal:'TIMETABLES & CONNECTIONS',garden:'MULTI-STEP JOURNEYS',prism:'COMPARE DURATIONS',fair:'MINUTES & SECONDS',mixed:'ALL TIME SKILLS'};
 function startRelay(band='selected'){
+ if(save.sharedMath){showSharedPractice('relay',true);return;}
  state.practice=true;state.practiceCount=0;state.practiceSeed=newRunSeed();state.practiceConfig=copyPractice(save.settings.mathPractice);state.practiceMode=save.settings.answerMode;state.practiceBand=band;
  if(band==='subtraction')state.practiceConfig.subjects=['subtraction'];
  else if(band!=='selected')state.practiceConfig.subjects=['time'];
@@ -262,6 +277,7 @@ function startRelay(band='selected'){
  nextPractice();
 }
 function showPracticeMenu(){
+ if(save.sharedMath){state.screen='practice-menu';showOverlay(`<p class="eyebrow">FIVE QUICK CHALLENGES</p><h2>PRACTICE RELAY</h2><p>${escapeHTML(sharedSummary(save))}</p><p>This relay uses five questions from your saved math settings. It does not change questions per game gate.</p><div class="menu"><button class="button primary" id="shared-relay-start">START NEW RELAY</button>${save.sharedGates.relay?.gate?'<button class="button" id="shared-relay-resume">CONTINUE RELAY</button>':''}<button class="button" id="back">BACK</button></div>`);bind('#shared-relay-start','click',()=>{if(save.sharedGates.relay?.gate&&!confirm('Restart this unfinished five-question relay? Completed learning records stay.'))return;showSharedPractice('relay',true);});bind('#shared-relay-resume','click',()=>showSharedPractice('relay'));bind('#back','click',showTitle);return;}
  state.screen='practice-menu';const c=save.settings.mathPractice;
  showOverlay(`<p class="eyebrow">FIVE QUICK CHALLENGES</p><h2>PRACTICE RELAY</h2><p>${practiceSummary(c)}. There are no hazards and mistakes cost nothing.</p><div class="menu stack"><button class="button primary" data-band="selected">ALL SELECTED PRACTICE</button>${c.subjects.includes('subtraction')?'<button class="button" data-band="subtraction">SUBTRACTION</button>':''}${c.subjects.includes('time')?Object.entries(TIME_BANDS).map(([id,label])=>`<button class="button" data-band="${id}">${label}</button>`).join(''):''}<button class="button ghost" id="back">BACK</button></div>`);
  bindAll('[data-band]','click',event=>startRelay(event.currentTarget.dataset.band));bind('#back','click',showTitle);
@@ -295,9 +311,23 @@ function openMath(problem,onComplete,options={}){
  });
 }
 
+function showSharedPractice(id,restartRelay=false){
+ state.screen='math';clearInput();state.practice=id==='relay';
+ const resume=()=>showSharedPractice(id);
+ openArcadeUI({save,id,persist,showOverlay,overlay,audio,restartRelay,
+  onExit:()=>{if(id==='relay')showPracticeMenu();else{resumePlay();state.player.invulnerable=1;}},
+  onSettings:()=>adultLogin(resume,()=>adultPanel(resume)),
+  onComplete:()=>{
+   if(id==='relay'){state.practice=false;showPracticeResults();return;}
+   closeOverlay();state.screen='play';const room=ROOMS[state.room],gate=room.gate;
+   state.platforms=createMachinery(room,save.solved);initWorld(state,room,save.world||(save.world={}));state.reveal=save.settings.reducedMotion?.5:1.7;state.player.invulnerable=1;persist();showToast('CLOCK CIRCUITS RESTORED · ROUTE OPEN',2200);if(gate)burst(gate.x,gate.y,COLORS.cyan,22);
+  }
+ });
+}
 function solveTerminal(index){
  if(state.boss)return;
  const room=ROOMS[state.room],gate=room.gate;if(!gate)return;
+ if(useSharedGate(save,gate.id)){showSharedPractice(gate.id);return;}
  const questions=questionsForGate(save,gate.id),pending=questions.filter(p=>!save.answered.includes(p.id));
  if(!pending.length){completeGate(save,gate.id);state.platforms=createMachinery(room,save.solved);initWorld(state,room,save.world||(save.world={}));persist();return;}
  const problem=pending[0];
@@ -538,6 +568,19 @@ function adultLogin(back,success=()=>adultPanel(back)){
  bind('#unlock','click',unlock);bind('#adult-pass','keydown',e=>{if(e.key==='Enter')unlock();});bind('#cancel','click',()=>{adult.lock();back();});
 }
 function adultPanel(back){
+ if(!save.sharedMath)return legacyAdultPanel(back);
+ state.screen='adult';if(!adult.unlocked)return adultLogin(back);
+ showOverlay(`<h2>ADULT SETTINGS · v${BUILD}</h2><p>Math practice is synchronized with Olivia and Mega Man. Any begun legacy gate keeps its original questions until completed.</p>${arcadeSettingsMarkup(save)}<h2>Chrono options</h2><label>New password (optional)<input id="new-password" type="password" autocomplete="new-password"></label><p id="adult-status" role="status"></p><div class="menu"><button class="button" id="save-password">Save password</button><button class="button" id="dev-start">${dev?'EXIT DEV AND RESTORE SAVE':'ENTER DEV MODE'}</button><button class="button primary" id="adult-back">LOCK AND BACK</button></div><h2>Backup and reset</h2><p>Export before deleting. Reset keeps one local backup; restoring it replaces current progress. Existing downloaded files and the adult password are not deleted.</p><div class="menu"><button class="button" id="export">EXPORT JSON</button><label class="button" for="import">IMPORT JSON</label><input class="sr-only" id="import" type="file" accept="application/json"><button class="button" id="reset-all">RESET ALL DATA</button><button class="button" id="restore-backup">RESTORE LOCAL BACKUP</button></div><div id="import-status" role="status" hidden></div>${dev?`<label>Jump to room<select id="dev-room">${ROOMS.map((r,i)=>`<option value="${i}">${r.stage} · ${r.name}</option>`).join('')}</select></label><label><input type="checkbox" id="dev-boxes" ${debugBoxes?'checked':''}>Debug hitboxes</label><button class="button" id="dev-jump">LOAD ROOM / RESET ENCOUNTER</button>`:''}`,true);
+ bindArcadeSettings(save,persist,()=>adultPanel(back),()=>adultPanel(back),()=>adult.unlocked);
+ bind('#save-password','click',async()=>{if(!adult.unlocked)return adultLogin(back);try{const value=overlay.querySelector('#new-password').value;if(!value)throw Error('Enter a new password.');await adult.change(value);overlay.querySelector('#adult-status').textContent='Password saved.';}catch(e){overlay.querySelector('#adult-status').textContent=e.message;}});
+ bind('#adult-back','click',()=>{adult.lock();back();});
+ bind('#export','click',exportSave);bind('#import','change',e=>importSave(e,()=>adultPanel(back)));
+ bind('#reset-all','click',()=>{if(!adult.unlocked)return adultLogin(back);if(!confirm(`Delete this campaign: ${save.cleared.length} cleared stages, ${save.weapons.length} powers, ${save.records.length} reports and ${save.sharedMath.events.length} math events, plus all pending work and settings? Export first. One local backup will be retained.`))return;try{replaceSavedProgress(freshSave());adultPanel(showTitle);}catch(e){overlay.querySelector('#adult-status').textContent=e.message||'Backup failed. Nothing was deleted.';}});
+ bind('#restore-backup','click',()=>{if(!adult.unlocked)return adultLogin(back);try{const restored=migrateSave(JSON.parse(localStorage.getItem(SAVE_KEY+'-backup')));if(!restored)throw Error('No valid local backup is available.');if(!confirm('Replace this campaign and its math data with the local backup? Current changes will be replaced.'))return;replaceSavedProgress(restored);adultPanel(showTitle);}catch(e){overlay.querySelector('#adult-status').textContent=e.message;}});
+ bind('#dev-start','click',()=>{if(!adult.unlocked)return adultLogin(back);if(dev){dev=false;debugBoxes=false;save=devBackup;devBackup=null;adult.lock();showTitle();return;}devBackup=save;save=structuredClone(save);dev=true;save.solved=[...GATE_IDS];save.weapons=Object.keys(POWERS);save.energy=8;adultPanel(back);});
+ bind('#dev-jump','click',()=>{if(!adult.unlocked)return adultLogin(back);debugBoxes=overlay.querySelector('#dev-boxes').checked;save.solved=[...GATE_IDS];state.screen='play';const room=Number(overlay.querySelector('#dev-room').value);closeOverlay();enterRoom(room,false);});
+}
+function legacyAdultPanel(back){
  state.screen='adult';if(!adult.unlocked)return adultLogin(back);
  const select=(id,value,inherit=false)=>`<select id="${id}">${inherit?'<option value="">Use global mode</option>':''}${MODES.map(m=>`<option value="${m}" ${m===value?'selected':''}>${m.toUpperCase()}</option>`).join('')}</select>`;
  showOverlay(`<h2>ADULT SETTINGS</h2><p>Changes apply to new runs. DEV runs do not save progress.</p>${practiceSettingsMarkup(save.settings.mathPractice)}<label>Answer mode ${select('adult-mode',save.settings.answerMode)}</label><label>Questions per gate<input id="adult-count" type="number" min="1" max="10" value="${save.settings.questionsPerGate}"></label><details><summary>Stage overrides</summary>${STAGES.map(s=>`<label>${s.name}${select('mode-'+s.id,save.settings.stageModes?.[s.id]||'',true)}</label>`).join('')}</details><label>New password (optional)<input id="new-password" type="password" autocomplete="new-password"></label><p id="adult-status" role="status"></p><div class="menu"><button class="button primary" id="adult-save">SAVE SETTINGS</button><button class="button" id="dev-start">${dev?'EXIT DEV AND RESTORE SAVE':'ENTER DEV MODE'}</button><button class="button" id="adult-back">LOCK AND BACK</button></div>${dev?`<label>Jump to room<select id="dev-room">${ROOMS.map((r,i)=>`<option value="${i}">${r.stage} · ${r.name}</option>`).join('')}</select></label><label><input type="checkbox" id="dev-boxes" ${debugBoxes?'checked':''}>Debug hitboxes</label><div class="menu"><button class="button" id="dev-jump">LOAD ROOM / RESET ENCOUNTER</button><button class="button" id="dev-refill">REFILL HEALTH AND ENERGY</button></div>`:''}`,true);

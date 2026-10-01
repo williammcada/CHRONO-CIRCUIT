@@ -52,6 +52,12 @@ test('cross uses four direct buttons and explicit cardinal grid positions',()=>{
  assert.ok(!html.includes('climb-pad'));
  for(const [action,position] of [['up','1/2'],['left','2/1'],['right','2/3'],['down','3/2']])assert.ok(css.includes(`[data-action=${action}]{grid-area:${position}}`));
 });
+test('capture failure and loss cannot latch a held action; fresh input still works',async()=>{
+ const g=await game({touch:true}),button=g.nodes.get('control-left');
+ button.setPointerCapture=()=>{throw Error('capture unavailable');};button.dispatchEvent({type:'pointerdown',pointerId:1});assert.equal(g.input.sources.size,0);
+ button.setPointerCapture=()=>{};button.dispatchEvent({type:'pointerdown',pointerId:2});assert.ok(g.input.held.get('left'));button.dispatchEvent({type:'lostpointercapture',pointerId:2});assert.ok(!g.input.held.get('left'));
+ button.dispatchEvent({type:'pointerdown',pointerId:3});assert.ok(g.input.held.get('left'));button.dispatchEvent({type:'pointerup',pointerId:3});assert.equal(g.input.sources.size,0);
+});
 test('sharp text shares canvas-local positioning, not a separately fixed viewport',async()=>{
  const {sharpText}=await import('../public/sharp-text.js');
  const oldDocument=globalThis.document,oldDpr=globalThis.devicePixelRatio;

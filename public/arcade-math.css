@@ -1,0 +1,16 @@
+.shared-settings{color:#fff3d1;background:#142135;padding:16px;border:1px solid #5b7689;border-radius:10px;min-width:0}
+#overlay,#overlay .panel,.shared-settings .shared-skills{touch-action:pan-y pinch-zoom}
+.shared-settings .panel{max-width:none}.shared-settings button,.arcade-gate button{color:#fff3d1;background:#254157;border:1px solid #7fbdbd;border-radius:6px;padding:6px;font:inherit;cursor:pointer}
+.shared-settings input:not([type=checkbox]),.shared-settings select{font-size:16px;width:100%;min-height:40px}
+.shared-settings input[type=checkbox]{width:auto;display:inline-block}.shared-settings label{font-size:16px}
+.shared-settings .shared-skills label{padding:8px;background:#0b182a;border-radius:6px;display:block}
+.shared-settings .shared-history{max-height:350px;overflow:auto}.shared-settings .selected-skills{margin:14px 0}.shared-settings #selected-list{max-height:220px;overflow:auto}
+.shared-settings #selected-list .row{justify-content:space-between;padding:6px 0;border-bottom:1px solid #405469}.shared-settings #selected-list span{flex:1;min-width:180px}
+.shared-settings .primary{background:#246667}.shared-settings .math-preview{color:#fff3d1;background:#0b182a}.shared-settings .preview-entry label{margin:0}.shared-settings .math-preview input{min-height:0}.shared-settings .math-preview .row{margin:0}
+.arcade-gate{display:grid;grid-template-columns:minmax(0,1fr) minmax(260px,40%);gap:18px;height:min(460px,calc(100dvh - 145px));min-height:260px;font:16px system-ui;line-height:1.4}
+.arcade-reading{overflow:auto;min-height:0}.arcade-reading #shared-question{font-size:24px;line-height:1.45}.arcade-reading p{margin:8px 0}
+.arcade-entry{display:grid;grid-template-rows:38px 30px minmax(140px,1fr) 40px;gap:5px;min-height:0}
+.arcade-entry #shared-answer{font:20px system-ui;width:100%;margin:0;padding:5px}.arcade-entry #shared-answer-format{overflow:auto;text-align:center}
+.arcade-keypad{display:grid;gap:5px}.arcade-gate button{min-height:0}.arcade-gate .button{font-size:15px;padding:6px;box-shadow:none}
+.fraction{display:inline-flex;flex-direction:column;text-align:center;vertical-align:middle;margin:0 3px}.numerator{border-bottom:1px solid;padding:0 3px}.denominator{padding:0 3px}
+@media(max-width:600px){.arcade-gate{grid-template-columns:1fr;height:auto}.arcade-entry{min-height:320px}.arcade-reading{overflow:visible}}

@@ -1,0 +1,18 @@
+{
+  "canonicalRepository": "williammcada/OLIVIA-MAGIC-BRACELET-QUEST",
+  "canonicalRevision": "df28efce7bde25a239915af7db72b8b5caf85eb4",
+  "canonicalDirectory": "src/shared-math",
+  "bundleSha256": "5216527ee97c316a4454760b5cf8862a6a675e62464d515f59226a70b38727dd",
+  "sourceFiles": {
+    "src/shared-math/mega-content.js": "a125ddb55e44d362ab9cea4508538c17ea168d1b63d3125002df9cf7ecd20fc6",
+    "src/expansion.ts": "9204569083b738dff91f0086837a1ed575b1630f66a2a284426a455347bb7189",
+    "src/facts.ts": "b8fb1a4123da98586242fbb943869ac8c2d5c3055d1da8552c3f4c526f04321a",
+    "src/shared-math/quarter-time.ts": "315a44a26c96d2726f225666807d7ca372683497ac3e7ca793be90410ebb293e",
+    "src/shared-math/catalog.ts": "c47e50d1301a2f0823aed92ba8a79b62d3c457a88b5b06bcfca57fb229596291",
+    "src/shared-math/engine.ts": "04631d3f9d35ec59e24d2edf39d0d8da032fce06c52ab2cf9fd1478f2fc715e8",
+    "src/math-format.ts": "58a276f43d7ae6b92dda1c8e414b56a5abee2f3d6690c8d8b2e68906a58b0efe",
+    "src/shared-math/preview.ts": "fd96f281253725b4ec63a139223f6472239136fbb3c12a46dd9b94db1c3be2b7",
+    "src/shared-math/settings.ts": "23ce270e45648c603de1f55fa38c476c8f164ef17c48dad899225151473b7fd5",
+    "src/shared-math/standalone.ts": "f561d191f11511993396bbb0c5d784da855705d3ab6ef70c8ca6e363cd3d3eed"
+  }
+}

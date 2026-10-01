@@ -3,12 +3,15 @@ import vm from 'node:vm';
 import {viewportLayout} from '../public/viewport-layout.js';
 
 const noop=()=>{};
-const moduleNames=['practice-config','practice-ui','subtraction','time-engine','curriculum','controls','stage-data','progress','gate-questions','physics','powers','bosses','portraits','combat','actor-art','hero-art','scenery','gate-ui','world-mechanisms','projectile-system','answer-mode','adult-lock'];
+const moduleNames=['practice-config','practice-ui','subtraction','time-engine','curriculum','controls','stage-data','progress','gate-questions','physics','powers','bosses','portraits','combat','actor-art','hero-art','scenery','gate-ui','world-mechanisms','projectile-system','answer-mode','adult-lock','arcade-math','arcade-ui'];
 
 // Exercise the shipped application in an isolated VM; only browser, audio, and timers
 // are replaced. Test handles are appended in memory and never shipped to players.
 export async function game(options={}){
  const modules=Object.assign({},...await Promise.all(moduleNames.map(name=>import(`../public/${name}.js`))));
+ // Historical tests explicitly exercise the retained legacy host path. Browser
+ // integration and new adapter tests cover the shared default shipped in game.js.
+ if(options.shared){Object.assign(modules,{freshSave:modules.freshGameSave,migrateSave:modules.migrateGameSave,startStageRun:modules.startGameStageRun,questionsForGate:modules.questionsForGameGate});}
  const events=new Map(),timers=[],storage=new Map();
  if(options.save)storage.set(modules.SAVE_KEY,JSON.stringify(options.save));
  const context2d=options.context||new Proxy({measureText:text=>({width:String(text).length*5})},{get:(obj,key)=>obj[key]||noop,set:(obj,key,v)=>(obj[key]=v,true)});
@@ -66,7 +69,7 @@ export async function game(options={}){
   return [];
  }
  const body=element('body'),root=element('root');
- for(const id of ['app','game','overlay','hud','toast','touch-controls','power-control','pause','cycle-control'])element('#'+id,{id});
+ for(const id of ['app','viewport','game','overlay','hud','toast','touch-controls','power-control','pause','cycle-control'])element('#'+id,{id});
  element('#game').tagName='CANVAS';
  const actions=['left','right','up','down','jump','fire','interact','power','cycle'];
  for(const action of actions){const id=action==='power'?'#power-control':action==='cycle'?'#cycle-control':'control-'+action;const n=element(id);n.setAttribute('data-action',action);n.classList.add('control');}

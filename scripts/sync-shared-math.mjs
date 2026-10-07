@@ -1,10 +1,11 @@
 // Rebuild from the pinned canonical Olivia checkout, never from private game HTML.
+import {execFileSync} from 'node:child_process';
 import {resolve,join} from 'node:path';
 import {createRequire} from 'node:module';
 import {readFile,writeFile} from 'node:fs/promises';
 import {createHash} from 'node:crypto';
 const source=resolve(process.argv[2]||'../olivia');
-const revision='df28efce7bde25a239915af7db72b8b5caf85eb4';
+const revision=execFileSync('git',['rev-parse','HEAD'],{cwd:source,encoding:'utf8'}).trim();
 const require=createRequire(join(source,'package.json'));
 const {build}=require('esbuild');
 const result=await build({stdin:{contents:`export * from './src/shared-math/standalone.ts'; export {validMath,pool} from './src/shared-math/engine.ts';`,resolveDir:source,sourcefile:'chrono-shared-entry.ts'},bundle:true,format:'esm',target:'es2020',outfile:'public/shared-math.js',metafile:true});

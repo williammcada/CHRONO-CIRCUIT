@@ -1,5 +1,5 @@
 // Chrono host adapter. Catalog, settings and progression come from Olivia unchanged.
-import {Practice,freshMath,validMath,catalog,pool} from './shared-math.js';
+import {Practice,freshMath,validMath,catalog,pool,nextMathItem,legacyMake,validFactPractice} from './shared-math.js';
 import {freshSave,migrateSave,startStageRun,questionsForGate} from './progress.js';
 import {GATE_IDS,STAGES,ROOMS,stageFor} from './stage-data.js';
 import {newRunSeed,randomSource} from './practice-config.js';
@@ -40,8 +40,9 @@ export function startGameStageRun(save,id){
 class SeededPractice extends Practice {
  next(){
   const seed=newRunSeed(),g=this.state.gate,skip=g.config.mode!=='progression'&&!g.bag.length?pool(g.config).length-1:0;
+  const factBefore=clone(this.state.factPractice||{});
   const original=Math.random;this.generating=true;
-  try{Math.random=randomSource(seed);super.next();g.item.sourceSeed=seed;g.item.sourceSkip=skip;}
+  try{Math.random=randomSource(seed);super.next();g.item.sourceSeed=seed;g.item.sourceSkip=skip;g.item.sourceGeneration=3;g.item.sourceFactContext=factBefore[g.item.skillId]||null;}
   finally{Math.random=original;this.generating=false;}
   this.flush();
  }
@@ -89,8 +90,10 @@ export function resetShared(save){
 }
 const canonicalItem=item=>{
  if(!Number.isInteger(item.sourceSeed)||item.sourceSeed<0||item.sourceSeed>4294967295||!Number.isInteger(item.sourceSkip)||item.sourceSkip<0||item.sourceSkip>=catalog.length)return false;
+ if(item.sourceGeneration!==undefined&&item.sourceGeneration!==3)return false;
+ if(item.sourceGeneration===3&&!validFactPractice(item.sourceFactContext?{[item.skillId]:item.sourceFactContext}:{}))return false;
  const original=Math.random;let expected;
- try{const random=randomSource(item.sourceSeed);for(let i=0;i<item.sourceSkip;i++)random();Math.random=random;expected=catalog.find(s=>s.id===item.skillId)?.make();}finally{Math.random=original;}
+ try{const random=randomSource(item.sourceSeed);for(let i=0;i<item.sourceSkip;i++)random();Math.random=random;expected=item.sourceGeneration===3?nextMathItem(catalog.find(s=>s.id===item.skillId),{factPractice:item.sourceFactContext?{[item.skillId]:clone(item.sourceFactContext)}:{}}):legacyMake(item.skillId);}finally{Math.random=original;}
  return !!expected&&Object.entries(expected).every(([key,value])=>JSON.stringify(item[key])===JSON.stringify(value));
 };
 export function migrateGameSave(raw){

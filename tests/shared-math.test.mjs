@@ -9,11 +9,11 @@ import {STAGES,ROOMS} from '../public/stage-data.js';
 const gate=STAGES[0].gates[0];
 const target=(s,ids,count=5)=>practiceFor(s).saveConfig({mode:'targeted',lo:0,hi:7,selected:ids,count,include24:false});
 const answer=(s,id,p)=>submitShared(s,id,p,String(p.state.gate.item.answer));
-test('canonical bundle hash, shared settings, 240 skills and basic time',()=>{
+test('canonical bundle hash, shared settings, 312 skills and basic time',()=>{
  const metadata=JSON.parse(readFileSync(new URL('../public/shared-math.provenance.json',import.meta.url)));
  assert.equal(createHash('sha256').update(readFileSync(new URL('../public/shared-math.js',import.meta.url))).digest('hex'),metadata.bundleSha256);
- assert.equal(catalog.length,240);assert.equal(new Set(catalog.map(s=>s.id)).size,240);
- const html=settingsHTML(practiceFor(freshGameSave()));for(const text of ['Preview selected skills','Clear selection','Search skills','Selected skills','Fixed Progression'])assert.ok(html.includes(text));assert.ok(!html.includes('Use Grade 3'));
+ assert.equal(catalog.length,312);assert.equal(new Set(catalog.map(s=>s.id)).size,312);
+ const html=settingsHTML(practiceFor(freshGameSave()));for(const text of ['Preview selected skills','Clear all selections','Search skills','Selected skills','Fixed Progression'])assert.ok(html.includes(text));assert.ok(!html.includes('Use Grade 3'));
  const skill=catalog.find(s=>s.id==='g3-time-quarter');for(let i=0;i<100;i++){const item=skill.make();assert.ok(checkAnswer(item,String(item.answer)));}
 });
 test('fresh shared defaults remain two time questions, legacy mapping is explicit',()=>{const s=freshGameSave();assert.equal(s.version,7);assert.equal(s.sharedMath.config.count,2);assert.deepEqual(s.sharedMath.config.selected,['g3-time-quarter']);const m=initialMath({mathPractice:{subjects:['subtraction'],subtraction:{maximum:100,types:['minuend-word']}}});assert.ok(m.note.includes('Earlier subtraction'));assert.ok(m.config.selected.includes('g2-missing'));assert.ok(m.config.selected.includes('N05'));assert.equal(configError(m.config),'');});

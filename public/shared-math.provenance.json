@@ -1,18 +1,20 @@
 {
   "canonicalRepository": "williammcada/OLIVIA-MAGIC-BRACELET-QUEST",
-  "canonicalRevision": "df28efce7bde25a239915af7db72b8b5caf85eb4",
+  "canonicalRevision": "8ce1cacf968c19c7e252838b3ca4c2a54f8fefdc",
   "canonicalDirectory": "src/shared-math",
-  "bundleSha256": "5216527ee97c316a4454760b5cf8862a6a675e62464d515f59226a70b38727dd",
+  "bundleSha256": "1ead91649954ff436a4146073ab730a7b745a59df8c40c35fbf599e175111dde",
   "sourceFiles": {
     "src/shared-math/mega-content.js": "a125ddb55e44d362ab9cea4508538c17ea168d1b63d3125002df9cf7ecd20fc6",
-    "src/expansion.ts": "9204569083b738dff91f0086837a1ed575b1630f66a2a284426a455347bb7189",
-    "src/facts.ts": "b8fb1a4123da98586242fbb943869ac8c2d5c3055d1da8552c3f4c526f04321a",
-    "src/shared-math/quarter-time.ts": "315a44a26c96d2726f225666807d7ca372683497ac3e7ca793be90410ebb293e",
-    "src/shared-math/catalog.ts": "c47e50d1301a2f0823aed92ba8a79b62d3c457a88b5b06bcfca57fb229596291",
-    "src/shared-math/engine.ts": "04631d3f9d35ec59e24d2edf39d0d8da032fce06c52ab2cf9fd1478f2fc715e8",
+    "src/expansion.ts": "6b20e764f47f11e7019f015fab27c0a8b55b5bccd982533f7f51950460f91d59",
+    "src/facts.ts": "5f5eafceff0b4eb0a855267998524c53352befd67e0e1348ca85e3bd5ba31f69",
     "src/math-format.ts": "58a276f43d7ae6b92dda1c8e414b56a5abee2f3d6690c8d8b2e68906a58b0efe",
-    "src/shared-math/preview.ts": "fd96f281253725b4ec63a139223f6472239136fbb3c12a46dd9b94db1c3be2b7",
-    "src/shared-math/settings.ts": "23ce270e45648c603de1f55fa38c476c8f164ef17c48dad899225151473b7fd5",
-    "src/shared-math/standalone.ts": "f561d191f11511993396bbb0c5d784da855705d3ab6ef70c8ca6e363cd3d3eed"
+    "src/shared-math/geometry.ts": "7826dc1e4ae04704b313e79fa1110c0aef4d5a3cfc5e2a1f4e62e121d8c7d00a",
+    "src/shared-math/quarter-time.ts": "315a44a26c96d2726f225666807d7ca372683497ac3e7ca793be90410ebb293e",
+    "src/shared-math/fluency.ts": "2e69e74a9e159379b766516139504385c79ced46eba38878ded47029abd1e3d5",
+    "src/shared-math/catalog.ts": "8868b40bd376e7b9870c7b82b21531f904ff66fcb80f3c614e0e2b7a375d97e6",
+    "src/shared-math/engine.ts": "a8c406c0e3d907ac0e93ebaa2b39c775dcbb9c67866e3ad0b135390202db8fae",
+    "src/shared-math/preview.ts": "276c5abf1e7ecaf3ebeac09d62ed1734faebf2f42be7e8150a159d518714c534",
+    "src/shared-math/settings.ts": "224f6f79c27ddef5ccb9b37fb7a0e4a0a919d36e6f663f1f706c089981ebb5ce",
+    "src/shared-math/standalone.ts": "c1f926f927db67e248ee4ba8f0b80d84b986cb79276de736a37c2229335b8d14"
   }
 }

@@ -13,7 +13,7 @@ const server=createServer(async(req,res)=>{try{
  res.setHeader('Content-Type',({'.html':'text/html','.js':'text/javascript','.css':'text/css','.png':'image/png','.json':'application/json','.webmanifest':'application/manifest+json'})[extname(path)]||'application/octet-stream');res.end(bytes);
  }catch{res.statusCode=404;res.end('Not found');}});
 await new Promise(done=>server.listen(4182,'127.0.0.1',done));
-const browser=await pw.launch({executablePath:await chromium.executablePath(),args:chromium.args.filter(a=>!a.includes('single-process')&&!a.includes('disable-web-security')&&!a.includes('allow-running-insecure-content')),headless:true});
+const browser=await pw.launch({executablePath:process.env.CHROMIUM_PATH||await chromium.executablePath(),args:['--no-sandbox','--disable-gpu','--allow-file-access-from-files'],headless:true});
 await mkdir('test-results',{recursive:true});
 try{
  const context=await browser.newContext({viewport:{width:852,height:393},hasTouch:true,serviceWorkers:'block'});

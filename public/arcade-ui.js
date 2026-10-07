@@ -1,3 +1,4 @@
+import {formatItem} from './shared-math.js';
 import {catalog,keypadKeys,formatMath,settingsHTML,wireSettings} from './shared-math.js';
 import {practiceFor,openSharedPractice,submitShared,persistGate,resetShared} from './arcade-math.js';
 const esc=s=>String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -29,7 +30,7 @@ export function openArcadeUI({save,id,persist,showOverlay,overlay,onExit,onCompl
  const narrate=()=>{if(!globalThis.speechSynthesis)return;globalThis.speechSynthesis.cancel();globalThis.speechSynthesis.speak(new SpeechSynthesisUtterance(p.state.gate.item.prompt));};
  function draw(){
   const g=p.state.gate,keys=keypadKeys(g.item.type),cols=keys.length>20?5:4,skill=catalog.find(s=>s.id===g.item.skillId);
-  showOverlay(`<section class="arcade-gate"><div class="arcade-reading"><p class="eyebrow">${id==='relay'?'PRACTICE RELAY':'MATH GATE'} · ${g.completed} / ${g.config.count} completed</p><p>${esc(skill.name)}</p><div id="shared-question">${formatMath(g.item.prompt)}</div><p id="shared-feedback" role="status">The world is paused. Take your time.</p><button class="button" id="shared-listen">Listen</button></div><div class="arcade-entry"><input id="shared-answer" aria-label="Answer; use keypad or physical keyboard" readonly inputmode="none" autocomplete="off"><div id="shared-answer-format" aria-hidden="true"></div><div class="arcade-keypad" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${keys.map(key=>`<button data-entry="${esc(key)}" aria-label="${esc(key==='back'?'Backspace':key===' '?'Space':key)}">${esc(({back:'⌫',clear:'Clear',' ':'Space'})[key]||key)}</button>`).join('')}</div><button class="button primary" id="shared-submit">Submit</button></div></section><div class="menu"><button class="button" id="shared-exit">Save & back</button><button class="button" id="shared-settings">Settings</button></div>`,true);
+  showOverlay(`<section class="arcade-gate"><div class="arcade-reading"><p class="eyebrow">${id==='relay'?'PRACTICE RELAY':'MATH GATE'} · ${g.completed} / ${g.config.count} completed</p><p>${esc(skill.name)}</p><div id="shared-question">${formatItem(g.item)}</div><p id="shared-feedback" role="status">The world is paused. Take your time.</p><button class="button" id="shared-listen">Listen</button></div><div class="arcade-entry"><input id="shared-answer" aria-label="Answer; use keypad or physical keyboard" readonly inputmode="none" autocomplete="off"><div id="shared-answer-format" aria-hidden="true"></div><div class="arcade-keypad" style="grid-template-columns:repeat(${cols},minmax(0,1fr))">${keys.map(key=>`<button data-entry="${esc(key)}" aria-label="${esc(key==='back'?'Backspace':key===' '?'Space':key)}">${esc(({back:'⌫',clear:'Clear',' ':'Space'})[key]||key)}</button>`).join('')}</div><button class="button primary" id="shared-submit">Submit</button></div></section><div class="menu"><button class="button" id="shared-exit">Save & back</button><button class="button" id="shared-settings">Settings</button></div>`,true);
   overlay.querySelector('#shared-answer').value=entry.draft;overlay.querySelector('#shared-answer-format').innerHTML=formatMath(entry.draft);
   overlay.querySelectorAll('[data-entry]').forEach(b=>b.onclick=()=>setAnswer(b.dataset.entry));
   overlay.querySelector('#shared-submit').onclick=submit;
@@ -38,7 +39,7 @@ export function openArcadeUI({save,id,persist,showOverlay,overlay,onExit,onCompl
   overlay.querySelector('#shared-listen').onclick=narrate;
   overlay.onkeydown=e=>{if(e.ctrlKey||e.metaKey||e.altKey||e.key==='Tab')return;
    if(e.key==='Enter'&&e.target.tagName!=='BUTTON'){e.preventDefault();e.stopPropagation();submit();}
-   else if(e.key==='Backspace'||e.key==='Delete'||/^[0-9aApPmMxX.,: /+*×÷()^<>≤≥=−-]$/.test(e.key)&&!(e.key===' '&&e.target.tagName==='BUTTON')){e.preventDefault();e.stopPropagation();setAnswer(e.key==='Backspace'?'back':e.key==='Delete'?'clear':e.key);}
+   else if(e.key==='Backspace'||e.key==='Delete'||/^[0-9rRaApPmMxX.,: /+*×÷()^<>≤≥=−-]$/.test(e.key)&&!(e.key===' '&&e.target.tagName==='BUTTON')){e.preventDefault();e.stopPropagation();setAnswer(e.key==='Backspace'?'back':e.key==='Delete'?'clear':e.key);}
   };
   overlay.querySelector('#shared-answer').focus({preventScroll:true});if(save.settings.narration)narrate();
  }

@@ -1,5 +1,9 @@
 # Project Brief — CHRONO CIRCUIT
 
+## Current candidate — 2026-10-07
+
+Shared Math v3: 312 skills, granular multiplication/division, persisted weighted facts, global Clear all selections, and 33 labeled geometry skills with direct/inverse area and perimeter. Canonical source: Olivia `8ce1cacf968c19c7e252838b3ca4c2a54f8fefdc`, `src/shared-math`. Existing evidence and host gate ownership are preserved. Automated source/build/browser checks passed; physical iPad/controller acceptance is not run. This candidate supersedes older catalog counts below. Public deployment of this candidate is not yet verified.
+
 **Brief version:** 0.7 — shared math synchronization  
 **Owner:** William McAda · **Credit:** A WILLIAM MCADA PRODUCT  
 **Repository:** williammcada/CHRONO-CIRCUIT, main  

@@ -6,7 +6,7 @@ import {join} from 'node:path';
 await rm('dist',{recursive:true,force:true});
 await mkdir('dist',{recursive:true});
 await cp('public','dist',{recursive:true});
-const files=(await readdir('dist',{recursive:true})).filter(p=>/\.(?:js|css|html|png|svg|webmanifest|json|wav)$/.test(p)&&p!=='sw.js').sort();
+const files=(await readdir('dist',{recursive:true})).filter(p=>/\.(?:js|css|html|png|webp|svg|webmanifest|json|wav)$/.test(p)&&p!=='sw.js').sort();
 const fingerprint=createHash('sha256');
 for(const file of files){fingerprint.update(file);fingerprint.update(await readFile(join('dist',file)));}
 const hash=fingerprint.digest('hex').slice(0,12);

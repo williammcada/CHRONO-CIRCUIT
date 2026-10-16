@@ -76,7 +76,7 @@ document.body.classList.toggle('high-contrast', save.settings.contrast);
 document.body.classList.toggle('reduced-motion', save.settings.reducedMotion);
 
 const images = { backdrop:new Image() };
-images.backdrop.src = './assets/foundry.png';
+images.backdrop.src = './assets/foundry.webp';
 
 const input = new Controls();
 addEventListener('keydown', (event) => {

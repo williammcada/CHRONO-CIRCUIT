@@ -28,7 +28,7 @@ await Promise.all([preloadActorArt(),preloadTempoArt(),preloadScenery()]);
 const canvas=createCanvas(320,180),ctx=canvas.getContext('2d');ctx.imageSmoothingEnabled=false;
 const g=await game({context:ctx,Image:LocalImage});
 async function snapshot(canvas){const img=new CanvasImage();const ready=new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject;});img.src=canvas.toBuffer('image/png');await ready;return img;}
-g.images.backdrop=await loadImage(resolve(base,'assets/foundry.png'));
+g.images.backdrop=await loadImage(resolve(base,'assets/foundry.webp'));
 const out=resolve('test-output');mkdirSync(out,{recursive:true});
 const sheet=createCanvas(1280,1568),c=sheet.getContext('2d');c.imageSmoothingEnabled=false;c.fillStyle='#0b1222';c.fillRect(0,0,sheet.width,sheet.height);
 for(const [i,stage]of g.modules.STAGES.entries()){
